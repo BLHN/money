@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>💰 Копилка</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #000000;
+            --tg-theme-hint-color: #999999;
+            --tg-theme-link-color: #2481cc;
+            --tg-theme-button-color: #2481cc;
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-secondary-bg-color: #f4f4f5;
+            
+            --primary-color: #2481cc;
+            --success-color: #4CAF50;
+            --danger-color: #FF5252;
+            --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            padding: 16px;
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            animation: fadeInDown 0.5s ease;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .total-balance {
+            font-size: 16px;
+            color: var(--tg-theme-hint-color);
+            font-weight: 500;
+        }
+
+        .total-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 8px 0;
+        }
+
+        .goals-grid {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .goal-card {
+            background: var(--tg-theme-secondary-bg-color);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .goal-card:active {
+            transform: scale(0.98);
+        }
+
+        .goal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--goal-color);
+            transition: width 0.3s ease;
+        }
+
+        .goal-card:active::before {
+            width: 100%;
+            opacity: 0.1;
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .goal-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .goal-emoji {
+            font-size: 24px;
+        }
+
+        .goal-amount {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--tg-theme-text-color);
+        }
+
+        .goal-progress-container {
+            margin-top: 12px;
+        }
+
+        .goal-progress-bar {
+            height: 8px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .goal-progress-fill {
+            height: 100%;
+            background: var(--goal-color);
+            border-radius: 4px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .goal-progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .goal-progress-text {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+            margin-top: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .action-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 16px;
+            background: var(--tg-theme-bg-color);
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-primary {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+        }
+
+        .btn-secondary {
+            background: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-text-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .modal-content {
+            background: var(--tg-theme-bg-color);
+            border-radius: 16px 16px 0 0;
+            padding: 24px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            font-size: 28px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--tg-theme-hint-color);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid var(--tg-theme-secondary-bg-color);
+            border-radius: 12px;
+            font-size: 16px;
+            background: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-text-color);
+            transition: all 0.2s ease;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color);
+            background: var(--tg-theme-bg-color);
+        }
+
+        .distribution-preview {
+            background: var(--tg-theme-secondary-bg-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .distribution-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--tg-theme-hint-color);
+            margin-bottom: 12px;
+        }
+
+        .distribution-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .distribution-item:last-child {
+            border-bottom: none;
+        }
+
+        .distribution-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .distribution-amount {
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 16px;
+            border: 4px solid var(--tg-theme-secondary-bg-color);
+            border-top-color: var(--tg-theme-button-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .history-item {
+            background: var(--tg-theme-secondary-bg-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .history-amount {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .history-date {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .empty-emoji {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading">
+            <div class="spinner"></div>
+            <div>Загрузка...</div>
+        </div>
+    </div>
+
+    <!-- Add Income Modal -->
+    <div id="addIncomeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">💰 Добавить доход</div>
+                <button class="modal-close" onclick="closeAddIncomeModal()">×</button>
+            </div>
+            <div id="modalError"></div>
+            <div class="input-group">
+                <label class="input-label">Сумма (₽)</label>
+                <input type="number" id="incomeAmount" class="input" placeholder="Введите сумму" min="1" step="1">
+            </div>
+            <div id="distributionPreview" class="distribution-preview" style="display: none;">
+                <div class="distribution-title">📊 Распределение</div>
+                <div id="distributionItems"></div>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 16px;" onclick="submitIncome()">
+                <span>✅</span> Добавить
+            </button>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">📊 История доходов</div>
+                <button class="modal-close" onclick="closeHistoryModal()">×</button>
+            </div>
+            <div id="historyContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Telegram WebApp API
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.enableClosingConfirmation();
+
+        // Apply Telegram theme colors
+        document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
+        document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000');
+        document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color || '#999999');
+        document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#2481cc');
+        document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff');
+        document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#f4f4f5');
+
+        // API Configuration - ЗАМЕНИТЕ НА ВАШИ URL
+        const API_BASE_URL = 'https://n8n.blhn-ai.ru/webhook';
+        const USER_ID = tg.initDataUnsafe?.user?.id || '1010975508'; // Fallback для тестирования
+
+        // State
+        let goalsData = null;
+
+        // Format number with spaces
+        function formatNumber(num) {
+            return new Intl.NumberFormat('ru-RU').format(Math.round(num));
+        }
+
+        // Haptic feedback
+        function haptic(type = 'medium') {
+            if (tg.HapticFeedback) {
+                if (type === 'light') tg.HapticFeedback.impactOccurred('light');
+                else if (type === 'medium') tg.HapticFeedback.impactOccurred('medium');
+                else if (type === 'heavy') tg.HapticFeedback.impactOccurred('heavy');
+                else if (type === 'success') tg.HapticFeedback.notificationOccurred('success');
+                else if (type === 'error') tg.HapticFeedback.notificationOccurred('error');
+            }
+        }
+
+        // Load goals
+        async function loadGoals() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/goals/${USER_ID}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    goalsData = data;
+                    renderGoals(data);
+                } else {
+                    throw new Error(data.error || 'Ошибка загрузки данных');
+                }
+            } catch (error) {
+                console.error('Error loading goals:', error);
+                document.getElementById('app').innerHTML = `
+                    <div class="error">
+                        ❌ Ошибка загрузки: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Render goals
+        function renderGoals(data) {
+            const totalBalance = data.totalBalance || 0;
+            
+            const goalsHtml = data.goals.map((goal, index) => `
+                <div class="goal-card" style="--goal-color: ${goal.color}; animation-delay: ${index * 0.1}s;" onclick="haptic('light')">
+                    <div class="goal-header">
+                        <div class="goal-label">
+                            <span class="goal-emoji">${goal.emoji}</span>
+                            <span>${goal.label}</span>
+                        </div>
+                        <div class="goal-amount">${formatNumber(goal.currentAmount)} ₽</div>
+                    </div>
+                    ${goal.hasTarget ? `
+                        <div class="goal-progress-container">
+                            <div class="goal-progress-bar">
+                                <div class="goal-progress-fill" style="width: ${goal.progress}%; background: ${goal.color};"></div>
+                            </div>
+                            <div class="goal-progress-text">
+                                <span>${goal.progress}%</span>
+                                <span>${formatNumber(goal.targetAmount)} ₽</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+
+            document.getElementById('app').innerHTML = `
+                <div class="header">
+                    <h1>💰 Копилка</h1>
+                    <div class="total-balance">Общий баланс</div>
+                    <div class="total-amount">${formatNumber(totalBalance)} ₽</div>
+                </div>
+                <div class="goals-grid">
+                    ${goalsHtml}
+                </div>
+            `;
+        }
+
+        // Calculate distribution
+        function calculateDistribution(amount) {
+            const settings = {
+                obyazatelnye: 20,
+                radosti: 9.25,
+                semya: 6.25,
+                credit: 13.25,
+                podushka: 6.25,
+                mustang: 30
+            };
+
+            return {
+                obyazatelnye: Math.round(amount * settings.obyazatelnye / 100),
+                radosti: Math.round(amount * settings.radosti / 100),
+                semya: Math.round(amount * settings.semya / 100),
+                credit: Math.round(amount * settings.credit / 100),
+                podushka: Math.round(amount * settings.podushka / 100),
+                mustang: Math.round(amount * settings.mustang / 100)
+            };
+        }
+
+        // Show add income modal
+        function showAddIncomeModal() {
+            haptic('medium');
+            document.getElementById('addIncomeModal').classList.add('active');
+            document.getElementById('incomeAmount').value = '';
+            document.getElementById('distributionPreview').style.display = 'none';
+            document.getElementById('modalError').innerHTML = '';
+            
+            // Auto-focus input
+            setTimeout(() => {
+                document.getElementById('incomeAmount').focus();
+            }, 300);
+        }
+
+        // Close add income modal
+        function closeAddIncomeModal() {
+            haptic('light');
+            document.getElementById('addIncomeModal').classList.remove('active');
+        }
+
+        // Update distribution preview
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('incomeAmount');
+            input.addEventListener('input', (e) => {
+                const amount = parseFloat(e.target.value);
+                if (amount > 0) {
+                    const dist = calculateDistribution(amount);
+                    const goals = [
+                        { emoji: '📋', label: 'Обязательные', value: dist.obyazatelnye },
+                        { emoji: '🎉', label: 'Радости', value: dist.radosti },
+                        { emoji: '👨‍👩‍👧', label: 'Семья', value: dist.semya },
+                        { emoji: '💳', label: 'Кредит х2', value: dist.credit },
+                        { emoji: '🛡', label: 'Подушка', value: dist.podushka },
+                        { emoji: '🎯', label: 'Мустанг', value: dist.mustang }
+                    ];
+
+                    const itemsHtml = goals.map(g => `
+                        <div class="distribution-item">
+                            <div class="distribution-label">
+                                <span>${g.emoji}</span>
+                                <span>${g.label}</span>
+                            </div>
+                            <div class="distribution-amount">${formatNumber(g.value)} ₽</div>
+                        </div>
+                    `).join('');
+
+                    document.getElementById('distributionItems').innerHTML = itemsHtml;
+                    document.getElementById('distributionPreview').style.display = 'block';
+                } else {
+                    document.getElementById('distributionPreview').style.display = 'none';
+                }
+            });
+        });
+
+        // Submit income
+        async function submitIncome() {
+            const amount = parseFloat(document.getElementById('incomeAmount').value);
+            
+            if (!amount || amount <= 0) {
+                document.getElementById('modalError').innerHTML = '<div class="error">Введите корректную сумму</div>';
+                haptic('error');
+                return;
+            }
+
+            haptic('medium');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/income`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: USER_ID, amount: amount })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    haptic('success');
+                    closeAddIncomeModal();
+                    
+                    // Reload goals
+                    document.getElementById('app').innerHTML = `
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <div>Обновление...</div>
+                        </div>
+                    `;
+                    await loadGoals();
+                    
+                    // Show success notification
+                    tg.showAlert('✅ Доход добавлен и распределен!');
+                } else {
+                    throw new Error(data.error || 'Ошибка при добавлении дохода');
+                }
+            } catch (error) {
+                haptic('error');
+                document.getElementById('modalError').innerHTML = `<div class="error">${error.message}</div>`;
+            }
+        }
+
+        // Show history modal
+        async function showHistoryModal() {
+            haptic('medium');
+            document.getElementById('historyModal').classList.add('active');
+            document.getElementById('historyContent').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Загрузка истории...</div>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/history/${USER_ID}`);
+                const data = await response.json();
+
+                if (data.success && data.history.length > 0) {
+                    const historyHtml = data.history.map((item, index) => {
+                        const date = new Date(item.createdAt);
+                        return `
+                            <div class="history-item" style="animation-delay: ${index * 0.05}s;">
+                                <div class="history-header">
+                                    <div class="history-amount">+${formatNumber(item.amount)} ₽</div>
+                                    <div class="history-date">${date.toLocaleDateString('ru-RU')}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    document.getElementById('historyContent').innerHTML = historyHtml;
+                } else {
+                    document.getElementById('historyContent').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-emoji">📭</div>
+                            <div>История пуста</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                haptic('error');
+                document.getElementById('historyContent').innerHTML = `
+                    <div class="error">Ошибка загрузки истории: ${error.message}</div>
+                `;
+            }
+        }
+
+        // Close history modal
+        function closeHistoryModal() {
+            haptic('light');
+            document.getElementById('historyModal').classList.remove('active');
+        }
+
+        // Close modals on background click
+        document.getElementById('addIncomeModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeAddIncomeModal();
+        });
+
+        document.getElementById('historyModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeHistoryModal();
+        });
+
+        // Initialize
+        loadGoals();
+
+        // Setup main button
+        tg.MainButton.text = '➕ Добавить доход';
+        tg.MainButton.show();
+        tg.MainButton.onClick(showAddIncomeModal);
+
+        // Setup secondary button for history
+        if (tg.SecondaryButton) {
+            tg.SecondaryButton.text = '📊 История';
+            tg.SecondaryButton.show();
+            tg.SecondaryButton.onClick(showHistoryModal);
+        }
+    </script>
+</body>
+</html>
