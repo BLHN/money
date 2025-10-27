@@ -481,8 +481,9 @@
         document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff');
         document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#f4f4f5');
 
-        // API Configuration - ЗАМЕНИТЕ НА ВАШИ URL
-        const API_BASE_URL = 'https://n8n.blhn-ai.ru/webhook';
+        // API Configuration - Ваши webhook URLs
+        const API_GET_URL = 'https://n8n.blhn-ai.ru/webhook/mini-app-api-get';
+        const API_POST_URL = 'https://n8n.blhn-ai.ru/webhook/mini-app-api-post';
         const USER_ID = tg.initDataUnsafe?.user?.id || '1010975508'; // Fallback для тестирования
 
         // State
@@ -507,7 +508,7 @@
         // Load goals
         async function loadGoals() {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/goals/${USER_ID}`);
+                const response = await fetch(`${API_GET_URL}/api/goals/${USER_ID}`);
                 const data = await response.json();
                 
                 if (data.success) {
@@ -653,7 +654,7 @@
             haptic('medium');
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/income`, {
+                const response = await fetch(`${API_POST_URL}/api/income`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: USER_ID, amount: amount })
@@ -697,7 +698,7 @@
             `;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/history/${USER_ID}`);
+                const response = await fetch(`${API_GET_URL}/api/history/${USER_ID}`);
                 const data = await response.json();
 
                 if (data.success && data.history.length > 0) {
