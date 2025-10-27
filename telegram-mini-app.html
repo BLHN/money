@@ -508,7 +508,7 @@
         // Load goals
         async function loadGoals() {
             try {
-                const response = await fetch(`${API_GET_URL}/api/goals/${USER_ID}`);
+                const response = await fetch(`${API_GET_URL}/goals/${USER_ID}`);
                 const data = await response.json();
                 
                 if (data.success) {
@@ -654,7 +654,7 @@
             haptic('medium');
 
             try {
-                const response = await fetch(`${API_POST_URL}/api/income`, {
+                const response = await fetch(`${API_POST_URL}/income`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: USER_ID, amount: amount })
@@ -698,7 +698,7 @@
             `;
 
             try {
-                const response = await fetch(`${API_GET_URL}/api/history/${USER_ID}`);
+                const response = await fetch(`${API_GET_URL}/history/${USER_ID}`);
                 const data = await response.json();
 
                 if (data.success && data.history.length > 0) {
