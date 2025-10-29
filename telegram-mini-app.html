@@ -38,21 +38,62 @@
             --tg-theme-button-text-color: #ffffff;
             --tg-theme-secondary-bg-color: #f4f4f5;
             
-            --primary-color: #2481cc;
-            --success-color: #4CAF50;
-            --danger-color: #FF5252;
-            --warning-color: #FFA726;
-            --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            /* Apple Colors */
+            --apple-blue: #007AFF;
+            --apple-green: #34C759;
+            --apple-red: #FF3B30;
+            --apple-orange: #FF9500;
+            --apple-gray: #8E8E93;
+            --apple-separator: rgba(60, 60, 67, 0.18);
+            
+            /* Dynamic colors - будут переопределены в JS */
+            --bg-primary: #F2F2F7;
+            --bg-secondary: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --separator: rgba(60, 60, 67, 0.18);
+            --card-bg: #FFFFFF;
+            --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            
+            /* Tab bar */
+            --tab-bar-height: 84px;
+            --add-button-size: 56px;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #F2F2F7;
-            color: var(--tg-theme-text-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
             padding: 0;
             overflow-x: hidden;
             overscroll-behavior: none;
-            padding-bottom: 140px; /* Отступ под MainButton + таббар */
+            padding-bottom: 170px; /* Отступ под кнопку + таббар */
+        }
+
+        /* Floating Add Income Button */
+        .add-income-floating {
+            position: fixed;
+            bottom: calc(var(--tab-bar-height) + 16px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: var(--add-button-size);
+            height: var(--add-button-size);
+            background: var(--apple-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4);
+            z-index: 100;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .add-income-floating:active {
+            transform: translateX(-50%) scale(0.9);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
         }
 
         /* Bottom Navigation */
@@ -61,15 +102,15 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(255, 255, 255, 0.8);
+            background: var(--card-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+            border-top: 0.5px solid var(--separator);
             display: flex;
             justify-content: space-around;
             padding: 8px 0 calc(env(safe-area-inset-bottom) + 4px) 0;
             z-index: 50;
-            box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.04);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
         }
 
         .nav-item {
@@ -81,11 +122,11 @@
             padding: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
-            color: var(--tg-theme-hint-color);
+            color: var(--text-secondary);
         }
 
         .nav-item.active {
-            color: var(--tg-theme-button-color);
+            color: var(--apple-blue);
         }
 
         .nav-item:active {
@@ -148,16 +189,16 @@
         }
 
         .goal-card {
-            background: #FFFFFF;
+            background: var(--card-bg);
             border-radius: 20px;
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            box-shadow: var(--card-shadow);
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             cursor: pointer;
             position: relative;
             overflow: hidden;
             animation: fadeInUp 0.5s ease;
-            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            border: 0.5px solid var(--separator);
         }
 
         .goal-card.dragging {
@@ -512,10 +553,12 @@
         }
 
         .stat-card {
-            background: var(--tg-theme-secondary-bg-color);
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 16px;
             animation: fadeInUp 0.5s ease;
+            border: 0.5px solid var(--separator);
+            box-shadow: var(--card-shadow);
         }
 
         .stat-label {
@@ -544,13 +587,15 @@
         }
 
         .setting-item {
-            background: var(--tg-theme-secondary-bg-color);
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 0.5px solid var(--separator);
+            box-shadow: var(--card-shadow);
         }
 
         .setting-label {
@@ -589,11 +634,13 @@
 
         /* History */
         .history-item {
-            background: var(--tg-theme-secondary-bg-color);
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 12px;
             animation: fadeInUp 0.3s ease;
+            border: 0.5px solid var(--separator);
+            box-shadow: var(--card-shadow);
         }
 
         .history-header {
@@ -760,14 +807,14 @@
         }
 
         .modal-content {
-            background: #FFFFFF;
+            background: var(--card-bg);
             border-radius: 20px 20px 0 0;
             padding: 24px;
             width: 100%;
             max-height: 80vh;
             overflow-y: auto;
             animation: slideUp 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
         }
         .confirm-dialog {
             text-align: center;
@@ -2067,10 +2114,8 @@
                 
                 await renderGoals();
                 
-                // Setup Telegram buttons
-                tg.MainButton.text = '➕ Добавить доход';
-                tg.MainButton.show();
-                tg.MainButton.onClick(showAddIncomeModal);
+                // Скрываем MainButton от Telegram (у нас своя кнопка)
+                tg.MainButton.hide();
                 
                 console.log('✅ Приложение успешно запущено');
 
