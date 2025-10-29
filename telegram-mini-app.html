@@ -1164,14 +1164,6 @@
             if (el) el.innerHTML = '';
         }
 
-        // ====== MAIN BUTTON MANAGEMENT ======
-        function showMainButton() {
-            tg.MainButton.show();
-        }
-
-        function hideMainButton() {
-            tg.MainButton.hide();
-        }
 
         // ====== API FUNCTIONS ======
         async function apiRequest(endpoint, options = {}) {
@@ -1636,7 +1628,6 @@
 
         function showGoalModal(goalId = null) {
             haptic('medium');
-            hideMainButton(); // Скрываем MainButton
             
             state.currentEditingGoal = goalId ? state.goals.find(g => g.id === goalId) : null;
 
@@ -1704,7 +1695,6 @@
             haptic('light');
             document.getElementById('goalModal').classList.remove('active');
             state.currentEditingGoal = null;
-            showMainButton(); // Показываем MainButton обратно
         }
 
         async function saveGoal() {
@@ -1796,7 +1786,6 @@
         // ====== INCOME MODAL ======
         function showAddIncomeModal() {
             haptic('medium');
-            hideMainButton(); // Скрываем MainButton
             
             document.getElementById('addIncomeModal').classList.add('active');
             document.getElementById('incomeAmount').value = '';
@@ -1809,7 +1798,6 @@
         function closeAddIncomeModal() {
             haptic('light');
             document.getElementById('addIncomeModal').classList.remove('active');
-            showMainButton(); // Показываем MainButton обратно
         }
 
         // Update distribution preview on input
