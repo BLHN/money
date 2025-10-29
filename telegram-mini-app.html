@@ -13,6 +13,20 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            /* Отключаем выделение текста везде */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Включаем выделение только для input и textarea */
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
         }
 
         :root {
@@ -38,44 +52,59 @@
             padding: 0;
             overflow-x: hidden;
             overscroll-behavior: none;
+            padding-bottom: 80px; /* Отступ под таббар */
         }
 
-        /* Navigation */
-        .nav-tabs {
-            display: flex;
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
             background: var(--tg-theme-bg-color);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-            position: sticky;
-            top: 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 12px 0;
             z-index: 100;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
         }
 
-        .nav-tab {
+        .nav-item {
             flex: 1;
-            padding: 12px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
-            border-bottom: 2px solid transparent;
             color: var(--tg-theme-hint-color);
         }
 
-        .nav-tab.active {
+        .nav-item.active {
             color: var(--tg-theme-button-color);
-            border-bottom-color: var(--tg-theme-button-color);
         }
 
-        .nav-tab:active {
+        .nav-item:active {
             transform: scale(0.95);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 600;
         }
 
         /* Content Pages */
         .page {
             display: none;
             padding: 16px;
-            padding-bottom: 80px;
+            padding-bottom: 24px;
             animation: fadeIn 0.3s ease;
         }
 
@@ -130,9 +159,18 @@
 
         .goal-card.dragging {
             opacity: 0.5;
+            transform: rotate(2deg);
         }
 
-        .goal-card:active {
+        .goal-card.drag-mode {
+            cursor: grab;
+        }
+
+        .goal-card.drag-mode:active {
+            cursor: grabbing;
+        }
+
+        .goal-card:active:not(.drag-mode) {
             transform: scale(0.98);
         }
 
@@ -145,6 +183,20 @@
             height: 100%;
             background: linear-gradient(180deg, var(--primary-color), var(--success-color));
             transition: width 0.3s ease;
+        }
+
+        /* Индикатор режима перемещения */
+        .drag-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 20px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .goal-card.drag-mode .drag-indicator {
+            opacity: 0.5;
         }
 
         .goal-header {
@@ -694,17 +746,37 @@
             margin-bottom: 16px;
             font-size: 14px;
         }
+
+        /* Debug Panel */
+        .debug-panel {
+            position: fixed;
+            bottom: 70px;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            color: #0f0;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+            z-index: 999;
+            display: none;
+            border-top: 2px solid #0f0;
+        }
+
+        .debug-panel.active {
+            display: block;
+        }
+
+        .debug-title {
+            margin-bottom: 4px;
+            font-weight: bold;
+            color: #0ff;
+        }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <div class="nav-tabs">
-        <div class="nav-tab active" onclick="switchPage('goals')">💰 Цели</div>
-        <div class="nav-tab" onclick="switchPage('history')">📊 История</div>
-        <div class="nav-tab" onclick="switchPage('stats')">📈 Статистика</div>
-        <div class="nav-tab" onclick="switchPage('settings')">⚙️ Настройки</div>
-    </div>
-
     <!-- Goals Page -->
     <div id="goalsPage" class="page active">
         <div class="loading">
@@ -726,6 +798,32 @@
     <!-- Settings Page -->
     <div id="settingsPage" class="page">
         <div id="settingsContent"></div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchPage('goals')">
+            <div class="nav-icon">💰</div>
+            <div class="nav-label">Цели</div>
+        </div>
+        <div class="nav-item" onclick="switchPage('history')">
+            <div class="nav-icon">📊</div>
+            <div class="nav-label">История</div>
+        </div>
+        <div class="nav-item" onclick="switchPage('stats')">
+            <div class="nav-icon">📈</div>
+            <div class="nav-label">Статистика</div>
+        </div>
+        <div class="nav-item" onclick="switchPage('settings')">
+            <div class="nav-icon">⚙️</div>
+            <div class="nav-label">Настройки</div>
+        </div>
+    </div>
+
+    <!-- Debug Panel -->
+    <div id="debugPanel" class="debug-panel">
+        <div class="debug-title">🐛 Debug Panel</div>
+        <div id="debugContent"></div>
     </div>
 
     <!-- Add/Edit Goal Modal -->
@@ -834,9 +932,59 @@
         if (theme.button_text_color) document.documentElement.style.setProperty('--tg-theme-button-text-color', theme.button_text_color);
         if (theme.secondary_bg_color) document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', theme.secondary_bg_color);
 
+        // ===== УЛУЧШЕННОЕ ПОЛУЧЕНИЕ USER ID =====
+        function getUserId() {
+            const tg = window.Telegram.WebApp;
+            
+            // Отладка: показываем что получили от Telegram
+            console.log('🔍 Telegram WebApp Debug:', {
+                platform: tg.platform,
+                version: tg.version,
+                initData: tg.initData ? 'есть данные' : 'НЕТ данных',
+                user: tg.initDataUnsafe?.user || 'НЕТ user'
+            });
+            
+            // Пытаемся получить ID
+            let userId = null;
+            
+            // Способ 1: Стандартный
+            if (tg.initDataUnsafe?.user?.id) {
+                userId = tg.initDataUnsafe.user.id;
+                console.log('✅ User ID получен от Telegram:', userId);
+            }
+            
+            // Способ 2: Из localStorage (если сохраняли ранее)
+            else if (localStorage.getItem('telegram_user_id')) {
+                userId = localStorage.getItem('telegram_user_id');
+                console.log('⚠️ User ID взят из localStorage:', userId);
+            }
+            
+            // Способ 3: Fallback для разработки
+            else {
+                userId = '1010975508';
+                console.log('⚠️ Используется fallback User ID:', userId);
+                
+                // Показываем предупреждение пользователю
+                if (tg.showAlert) {
+                    setTimeout(() => {
+                        tg.showAlert('⚠️ Не удалось получить ваш ID. Откройте приложение через бота в Telegram.');
+                    }, 1000);
+                }
+            }
+            
+            // Сохраняем в localStorage для будущих сессий
+            if (tg.initDataUnsafe?.user?.id) {
+                localStorage.setItem('telegram_user_id', tg.initDataUnsafe.user.id);
+            }
+            
+            return userId;
+        }
+
+        const USER_ID = getUserId();
+        console.log('🎯 Итоговый User ID:', USER_ID);
+
         // API Configuration v2.0 - Backend Compatible
         const API_BASE = 'https://n8n.blhn-ai.ru/webhook/api-backend-v2';
-        const USER_ID = tg.initDataUnsafe?.user?.id || '1010975508';
 
         // State
         let state = {
@@ -845,7 +993,8 @@
             stats: {},
             settings: {},
             currentEditingGoal: null,
-            pendingIncome: null
+            pendingIncome: null,
+            dragMode: false
         };
 
         // ====== UTILITY FUNCTIONS ======
@@ -885,6 +1034,15 @@
             if (el) el.innerHTML = '';
         }
 
+        // ====== MAIN BUTTON MANAGEMENT ======
+        function showMainButton() {
+            tg.MainButton.show();
+        }
+
+        function hideMainButton() {
+            tg.MainButton.hide();
+        }
+
         // ====== API FUNCTIONS ======
         async function apiRequest(endpoint, options = {}) {
             try {
@@ -895,12 +1053,17 @@
                 // Backend expects: GET via ?path=..., POST/PUT/DELETE via body {path, method, ...}
                 if (method === 'GET') {
                     url += `?path=${encodeURIComponent(endpoint)}`;
+                    console.log('📡 API GET:', url);
                 } else {
                     // For POST/PUT/DELETE/PATCH: send as body with path and method
                     body = JSON.stringify({
                         path: endpoint,
                         method: method,
                         ...(options.body || {})
+                    });
+                    console.log('📡 API POST:', {
+                        url: API_BASE,
+                        body: JSON.parse(body)
                     });
                 }
                 
@@ -914,14 +1077,24 @@
                 });
 
                 const data = await response.json();
+                console.log('📥 API Response:', data);
 
                 if (!response.ok || !data.success) {
+                    console.error('❌ API Error:', {
+                        status: response.status,
+                        error: data.error,
+                        details: data.details
+                    });
                     throw new Error(data.error || `HTTP ${response.status}`);
                 }
 
                 return data;
             } catch (error) {
-                console.error('API Error:', error);
+                console.error('❌ API Request Failed:', {
+                    endpoint: endpoint,
+                    method: method,
+                    error: error.message
+                });
                 throw error;
             }
         }
@@ -1053,10 +1226,10 @@
             haptic('light');
             
             // Update tabs
-            document.querySelectorAll('.nav-tab').forEach(tab => {
+            document.querySelectorAll('.nav-item').forEach(tab => {
                 tab.classList.remove('active');
             });
-            event.target.classList.add('active');
+            event.target.closest('.nav-item').classList.add('active');
 
             // Update pages
             document.querySelectorAll('.page').forEach(page => {
@@ -1108,7 +1281,8 @@
                     const progress = goal.target_amount ? Math.min((goal.current_amount / goal.target_amount) * 100, 100) : 0;
                     
                     return `
-                        <div class="goal-card" data-goal-id="${goal.id}" style="animation-delay: ${index * 0.1}s;" onclick="editGoal(${goal.id})">
+                        <div class="goal-card" data-goal-id="${goal.id}" style="animation-delay: ${index * 0.1}s;" onclick="handleGoalClick(${goal.id})">
+                            <div class="drag-indicator">⠿</div>
                             <div class="goal-header">
                                 <div class="goal-label">
                                     <span class="goal-emoji">${goal.emoji}</span>
@@ -1144,6 +1318,9 @@
                             <span>➕</span> Добавить цель
                         </button>
                     </div>
+                    <div style="text-align: center; padding: 16px; color: var(--tg-theme-hint-color); font-size: 12px;">
+                        💡 Долго нажмите на цель, чтобы изменить порядок
+                    </div>
                 `;
 
                 // Initialize drag and drop
@@ -1154,15 +1331,59 @@
             }
         }
 
-        // ====== DRAG & DROP ======
+        // ====== DRAG & DROP with LONG PRESS ======
+        let longPressTimer = null;
+        let sortableInstance = null;
+
+        function handleGoalClick(goalId) {
+            if (!state.dragMode) {
+                editGoal(goalId);
+            }
+        }
+
         function initSortable() {
             const grid = document.getElementById('goalsGrid');
             if (!grid || !window.Sortable) return;
 
-            new Sortable(grid, {
+            const goalCards = grid.querySelectorAll('.goal-card');
+
+            goalCards.forEach(card => {
+                // Touch start - начинаем таймер долгого нажатия
+                card.addEventListener('touchstart', function(e) {
+                    longPressTimer = setTimeout(() => {
+                        enableDragMode();
+                        haptic('heavy');
+                    }, 500); // 500ms для активации режима перемещения
+                });
+
+                // Touch end/cancel - сбрасываем таймер
+                card.addEventListener('touchend', () => {
+                    clearTimeout(longPressTimer);
+                });
+
+                card.addEventListener('touchcancel', () => {
+                    clearTimeout(longPressTimer);
+                });
+
+                // Mouse events для десктопа
+                card.addEventListener('mousedown', function(e) {
+                    longPressTimer = setTimeout(() => {
+                        enableDragMode();
+                        haptic('heavy');
+                    }, 500);
+                });
+
+                card.addEventListener('mouseup', () => {
+                    clearTimeout(longPressTimer);
+                });
+            });
+
+            // Инициализация Sortable (неактивно по умолчанию)
+            sortableInstance = new Sortable(grid, {
                 animation: 150,
                 handle: '.goal-card',
                 draggable: '.goal-card',
+                disabled: true, // Неактивно по умолчанию
                 onEnd: async function(evt) {
                     haptic('medium');
                     const goalCards = grid.querySelectorAll('.goal-card');
@@ -1171,6 +1392,7 @@
                     try {
                         await reorderGoals(newOrder);
                         haptic('success');
+                        disableDragMode();
                     } catch (error) {
                         haptic('error');
                         tg.showAlert('Ошибка при изменении порядка: ' + error.message);
@@ -1180,11 +1402,42 @@
             });
         }
 
+        function enableDragMode() {
+            state.dragMode = true;
+            const cards = document.querySelectorAll('.goal-card');
+            cards.forEach(card => card.classList.add('drag-mode'));
+            
+            if (sortableInstance) {
+                sortableInstance.option('disabled', false);
+            }
+            
+            tg.showAlert('🔄 Режим перемещения активирован. Перетащите цели.');
+            
+            // Автоотключение через 10 секунд
+            setTimeout(() => {
+                if (state.dragMode) {
+                    disableDragMode();
+                }
+            }, 10000);
+        }
+
+        function disableDragMode() {
+            state.dragMode = false;
+            const cards = document.querySelectorAll('.goal-card');
+            cards.forEach(card => card.classList.remove('drag-mode'));
+            
+            if (sortableInstance) {
+                sortableInstance.option('disabled', true);
+            }
+        }
+
         // ====== GOAL MODAL ======
         const defaultEmojis = ['🎯', '💰', '🏠', '🚗', '✈️', '📱', '💻', '🎓', '💍', '🎨', '🎮', '📚', '🏋️', '🌴', '🎸', '⚡'];
 
         function showGoalModal(goalId = null) {
             haptic('medium');
+            hideMainButton(); // Скрываем MainButton
+            
             state.currentEditingGoal = goalId ? state.goals.find(g => g.id === goalId) : null;
 
             const modal = document.getElementById('goalModal');
@@ -1251,6 +1504,7 @@
             haptic('light');
             document.getElementById('goalModal').classList.remove('active');
             state.currentEditingGoal = null;
+            showMainButton(); // Показываем MainButton обратно
         }
 
         async function saveGoal() {
@@ -1342,6 +1596,8 @@
         // ====== INCOME MODAL ======
         function showAddIncomeModal() {
             haptic('medium');
+            hideMainButton(); // Скрываем MainButton
+            
             document.getElementById('addIncomeModal').classList.add('active');
             document.getElementById('incomeAmount').value = '';
             document.getElementById('distributionPreview').style.display = 'none';
@@ -1353,6 +1609,7 @@
         function closeAddIncomeModal() {
             haptic('light');
             document.getElementById('addIncomeModal').classList.remove('active');
+            showMainButton(); // Показываем MainButton обратно
         }
 
         // Update distribution preview on input
@@ -1654,18 +1911,61 @@
             }
         }
 
+        // ====== DEBUG PANEL ======
+        let tapCount = 0;
+        document.addEventListener('click', () => {
+            tapCount++;
+            if (tapCount === 3) {
+                const panel = document.getElementById('debugPanel');
+                panel.classList.toggle('active');
+                updateDebugPanel();
+                tapCount = 0;
+            }
+            setTimeout(() => tapCount = 0, 1000);
+        });
+
+        function updateDebugPanel() {
+            const panel = document.getElementById('debugContent');
+            if (!panel) return;
+            
+            panel.innerHTML = `
+                User ID: ${USER_ID}<br>
+                Goals: ${state.goals.length}<br>
+                History: ${state.history.length}<br>
+                Platform: ${tg.platform}<br>
+                Version: ${tg.version}<br>
+                Telegram User: ${tg.initDataUnsafe?.user?.id || 'NONE'}<br>
+                API: ${API_BASE}
+            `;
+        }
+
+        // Обновляем каждые 2 секунды если видна
+        setInterval(() => {
+            const panel = document.getElementById('debugPanel');
+            if (panel && panel.classList.contains('active')) {
+                updateDebugPanel();
+            }
+        }, 2000);
+
         // ====== INITIALIZATION ======
         async function init() {
             try {
+                // Показываем индикатор загрузки
+                console.log('🚀 Инициализация приложения...');
+                console.log('👤 User ID:', USER_ID);
+                console.log('🌐 API Base:', API_BASE);
+                
                 await renderGoals();
                 
                 // Setup Telegram buttons
                 tg.MainButton.text = '➕ Добавить доход';
                 tg.MainButton.show();
                 tg.MainButton.onClick(showAddIncomeModal);
+                
+                console.log('✅ Приложение успешно запущено');
 
             } catch (error) {
-                console.error('Init error:', error);
+                console.error('❌ Init error:', error);
                 tg.showAlert('Ошибка инициализации: ' + error.message);
             }
         }
