@@ -46,13 +46,13 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--tg-theme-bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #F2F2F7;
             color: var(--tg-theme-text-color);
             padding: 0;
             overflow-x: hidden;
             overscroll-behavior: none;
-            padding-bottom: 80px; /* Отступ под таббар */
+            padding-bottom: 140px; /* Отступ под MainButton + таббар */
         }
 
         /* Bottom Navigation */
@@ -61,13 +61,15 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: var(--tg-theme-bg-color);
-            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 0.5px solid rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: space-around;
-            padding: 8px 0 12px 0;
-            z-index: 100;
-            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+            padding: 8px 0 calc(env(safe-area-inset-bottom) + 4px) 0;
+            z-index: 50;
+            box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.04);
         }
 
         .nav-item {
@@ -146,20 +148,22 @@
         }
 
         .goal-card {
-            background: var(--tg-theme-secondary-bg-color);
-            border-radius: 16px;
-            padding: 16px;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             cursor: pointer;
             position: relative;
             overflow: hidden;
             animation: fadeInUp 0.5s ease;
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
         }
 
         .goal-card.dragging {
-            opacity: 0.5;
-            transform: rotate(2deg);
+            opacity: 0.8;
+            transform: scale(1.05) rotate(2deg);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         }
 
         .goal-card.drag-mode {
@@ -171,18 +175,12 @@
         }
 
         .goal-card:active:not(.drag-mode) {
-            transform: scale(0.98);
+            transform: scale(0.97);
+            transition: all 0.15s ease;
         }
 
         .goal-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(180deg, var(--primary-color), var(--success-color));
-            transition: width 0.3s ease;
+            display: none; /* Убираем цветную полоску для чистоты */
         }
 
         /* Индикатор режима перемещения */
@@ -229,18 +227,18 @@
         }
 
         .goal-progress-bar {
-            height: 8px;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 4px;
+            height: 6px;
+            background: rgba(120, 120, 128, 0.12);
+            border-radius: 3px;
             overflow: hidden;
             position: relative;
         }
 
         .goal-progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
-            border-radius: 4px;
-            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(90deg, #007AFF, #00C7BE);
+            border-radius: 3px;
+            transition: width 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
             position: relative;
             overflow: hidden;
         }
@@ -252,7 +250,7 @@
             left: 0;
             bottom: 0;
             right: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
             animation: shimmer 2s infinite;
         }
 
@@ -366,19 +364,20 @@
 
         .input {
             width: 100%;
-            padding: 14px;
-            border: 2px solid var(--tg-theme-secondary-bg-color);
+            padding: 14px 16px;
+            border: none;
             border-radius: 12px;
-            font-size: 16px;
-            background: var(--tg-theme-secondary-bg-color);
+            font-size: 17px;
+            background: rgba(120, 120, 128, 0.12);
             color: var(--tg-theme-text-color);
             transition: all 0.2s ease;
+            letter-spacing: -0.4px;
         }
 
         .input:focus {
             outline: none;
-            border-color: var(--tg-theme-button-color);
-            background: var(--tg-theme-bg-color);
+            background: rgba(120, 120, 128, 0.16);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
         }
 
         .input-hint {
@@ -420,18 +419,19 @@
 
         /* Buttons */
         .btn {
-            padding: 14px;
+            padding: 16px;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 14px;
+            font-size: 17px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
             width: 100%;
+            letter-spacing: -0.4px;
         }
 
         .btn:active {
@@ -439,19 +439,21 @@
         }
 
         .btn-primary {
-            background: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
+            background: #007AFF;
+            color: #FFFFFF;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
         }
 
         .btn-secondary {
-            background: var(--tg-theme-secondary-bg-color);
+            background: rgba(120, 120, 128, 0.12);
             color: var(--tg-theme-text-color);
         }
 
         .btn-danger {
-            background: var(--danger-color);
+            background: #FF3B30;
             color: white;
             margin-top: 24px;
+            box-shadow: 0 4px 12px rgba(255, 59, 48, 0.25);
         }
 
         .btn-group {
@@ -728,7 +730,45 @@
             to { transform: translateY(0); }
         }
 
-        /* Confirmation Dialog */
+        @keyframes slideDown {
+            from { 
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .modal-content {
+            background: #FFFFFF;
+            border-radius: 20px 20px 0 0;
+            padding: 24px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.1);
+        }
         .confirm-dialog {
             text-align: center;
             padding: 16px 0;
@@ -1334,6 +1374,9 @@
         // ====== DRAG & DROP with LONG PRESS ======
         let longPressTimer = null;
         let sortableInstance = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        const MOVE_THRESHOLD = 10; // Порог движения в пикселях
 
         function handleGoalClick(goalId) {
             if (!state.dragMode) {
@@ -1348,12 +1391,28 @@
             const goalCards = grid.querySelectorAll('.goal-card');
 
             goalCards.forEach(card => {
-                // Touch start - начинаем таймер долгого нажатия
+                // Touch start - запоминаем начальную позицию и запускаем таймер
                 card.addEventListener('touchstart', function(e) {
+                    const touch = e.touches[0];
+                    touchStartX = touch.clientX;
+                    touchStartY = touch.clientY;
+                    
                     longPressTimer = setTimeout(() => {
                         enableDragMode();
                         haptic('heavy');
-                    }, 500); // 500ms для активации режима перемещения
+                    }, 500);
+                });
+
+                // Touch move - если палец двигается, отменяем долгое нажатие
+                card.addEventListener('touchmove', function(e) {
+                    const touch = e.touches[0];
+                    const deltaX = Math.abs(touch.clientX - touchStartX);
+                    const deltaY = Math.abs(touch.clientY - touchStartY);
+                    
+                    // Если движение больше порога - отменяем долгое нажатие
+                    if (deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD) {
+                        clearTimeout(longPressTimer);
+                    }
                 });
 
                 // Touch end/cancel - сбрасываем таймер
@@ -1367,10 +1426,22 @@
 
                 // Mouse events для десктопа
                 card.addEventListener('mousedown', function(e) {
+                    touchStartX = e.clientX;
+                    touchStartY = e.clientY;
+                    
                     longPressTimer = setTimeout(() => {
                         enableDragMode();
                         haptic('heavy');
                     }, 500);
+                });
+
+                card.addEventListener('mousemove', function(e) {
+                    const deltaX = Math.abs(e.clientX - touchStartX);
+                    const deltaY = Math.abs(e.clientY - touchStartY);
+                    
+                    if (deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD) {
+                        clearTimeout(longPressTimer);
+                    }
                 });
 
                 card.addEventListener('mouseup', () => {
@@ -1380,10 +1451,11 @@
 
             // Инициализация Sortable (неактивно по умолчанию)
             sortableInstance = new Sortable(grid, {
-                animation: 150,
+                animation: 200,
                 handle: '.goal-card',
                 draggable: '.goal-card',
                 disabled: true, // Неактивно по умолчанию
+                ghostClass: 'dragging',
                 onEnd: async function(evt) {
                     haptic('medium');
                     const goalCards = grid.querySelectorAll('.goal-card');
@@ -1403,6 +1475,8 @@
         }
 
         function enableDragMode() {
+            if (state.dragMode) return; // Не активируем повторно
+            
             state.dragMode = true;
             const cards = document.querySelectorAll('.goal-card');
             cards.forEach(card => card.classList.add('drag-mode'));
@@ -1411,12 +1485,14 @@
                 sortableInstance.option('disabled', false);
             }
             
-            tg.showAlert('🔄 Режим перемещения активирован. Перетащите цели.');
+            // Показываем тост вместо alert
+            showToast('🔄 Режим перемещения');
             
             // Автоотключение через 10 секунд
             setTimeout(() => {
                 if (state.dragMode) {
                     disableDragMode();
+                    showToast('✅ Режим перемещения выключен');
                 }
             }, 10000);
         }
@@ -1429,6 +1505,40 @@
             if (sortableInstance) {
                 sortableInstance.option('disabled', true);
             }
+        }
+
+        // Простой toast для уведомлений (вместо alert)
+        function showToast(message) {
+            const existingToast = document.getElementById('toast');
+            if (existingToast) existingToast.remove();
+            
+            const toast = document.createElement('div');
+            toast.id = 'toast';
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.85);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 20px;
+                font-size: 15px;
+                font-weight: 600;
+                z-index: 10000;
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                animation: slideDown 0.3s ease;
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideUp 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
         }
 
         // ====== GOAL MODAL ======
