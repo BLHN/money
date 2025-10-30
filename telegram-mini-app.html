@@ -835,16 +835,17 @@
 
         .history-actions .btn {
             font-size: 13px;
-            padding: 6px 12px;
+            padding: 8px 14px;
             min-height: auto;
-            background: transparent;
-            color: var(--apple-red);
+            background: rgba(120, 120, 128, 0.08);
+            color: var(--text-primary);
             box-shadow: none;
             border: 1px solid var(--separator);
+            font-weight: 500;
         }
         
         .history-actions .btn:active {
-            background: rgba(255, 59, 48, 0.1);
+            background: rgba(120, 120, 128, 0.16);
         }
 
         /* Loading & Empty States */
@@ -1186,17 +1187,20 @@
     <div id="confirmUndoModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title" id="confirmUndoTitle">🔙 Отменить доход</div>
+                <div class="modal-title" id="confirmUndoTitle">Отменить доход</div>
                 <button class="modal-close" onclick="closeConfirmUndoModal()">×</button>
             </div>
             
             <div class="confirm-dialog">
-                <div class="confirm-detail" id="confirmUndoDetails"></div>
-                <div class="confirm-message" style="margin-top: 12px;">Вы уверены? Это вернет средства из всех целей.</div>
+                <div class="confirm-detail" id="confirmUndoDetails" style="font-size: 18px; font-weight: 600; padding: 16px; background: var(--input-bg); border-radius: 12px;"></div>
+                <div class="confirm-message" style="margin-top: 16px; font-size: 15px; color: var(--text-secondary);">Вы уверены? Это вернет средства из всех целей.</div>
                 
-                <div class="btn-group">
+                <div class="btn-group" style="margin-top: 20px;">
                     <button class="btn btn-secondary" onclick="closeConfirmUndoModal()">Отмена</button>
-                    <button class="btn btn-primary" style="background: var(--apple-red); box-shadow: 0 4px 12px rgba(255, 59, 48, 0.25);" onclick="confirmUndoIncome()">Отменить доход</button>
+                    <button class="btn btn-primary" id="confirmUndoBtn" style="background: var(--apple-red); box-shadow: 0 4px 12px rgba(255, 59, 48, 0.25);" onclick="confirmUndoIncome()">
+                        <span class="btn-text">Отменить доход</span>
+                        <div class="btn-spinner"></div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1382,8 +1386,8 @@
 
         // ====== API FUNCTIONS ======
         async function apiRequest(endpoint, options = {}) {
+            const method = options.method || 'GET';
             try {
-                const method = options.method || 'GET';
                 let url = API_BASE;
                 let body = null;
                 
@@ -2150,10 +2154,10 @@
             const details = document.getElementById('confirmUndoDetails');
 
             details.innerHTML = `
-                <div style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">
+                <div style="margin-bottom: 6px;">
                     Доход ${formatNumber(amount)} ₽
                 </div>
-                <div style="font-size: 14px; color: var(--text-secondary);">
+                <div style="font-size: 14px; color: var(--text-secondary); font-weight: 500;">
                     от ${dateStr}
                 </div>
             `;
@@ -2177,6 +2181,11 @@
             const { transactionId } = pendingUndoTransaction;
             haptic('heavy');
 
+            // Показываем индикатор загрузки
+            const btn = document.getElementById('confirmUndoBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
             try {
                 await apiRequest(`/income/${USER_ID}/${transactionId}`, {
                     method: 'DELETE'
@@ -2184,14 +2193,20 @@
                 
                 haptic('success');
                 closeConfirmUndoModal();
+                
+                // Обновляем обе страницы
                 await renderGoals();
                 await renderHistory();
+                
                 showToast('🔙 Доход отменен');
 
             } catch (error) {
                 haptic('error');
-                closeConfirmUndoModal();
                 tg.showAlert('Ошибка: ' + error.message);
+            } finally {
+                // Убираем индикатор загрузки
+                btn.classList.remove('loading');
+                btn.disabled = false;
             }
         }
 
@@ -2273,13 +2288,11 @@
                             </div>
                             ${descriptionHtml}
                             ${distributionHtml}
-                            ${index === 0 ? `
-                                <div class="history-actions">
-                                    <button class="btn" onclick="undoIncome('${item.transaction_id}', ${item.amount}, '${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}')">
-                                        Отменить
-                                    </button>
-                                </div>
-                            ` : ''}
+                            <div class="history-actions">
+                                <button class="btn" onclick="undoIncome('${item.transaction_id}', ${item.amount}, '${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}')">
+                                    Отменить
+                                </button>
+                            </div>
                         </div>
                     `;
                 }).join('');
