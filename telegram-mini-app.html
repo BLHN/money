@@ -451,7 +451,7 @@
         
         /* Sticky button для модалки дохода */
         #addIncomeModal .modal-content {
-            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            padding-bottom: 0;
         }
         
         .modal-sticky-footer {
@@ -1176,7 +1176,7 @@
             
             <div class="input-group">
                 <label class="input-label">Сумма (₽)</label>
-                <input type="number" id="incomeAmount" class="input" placeholder="Введите сумму" min="1" step="1" inputmode="decimal" pattern="[0-9]*" enterkeyhint="done">
+                <input type="number" id="incomeAmount" class="input" placeholder="Введите сумму" min="1" step="1" inputmode="numeric" enterkeyhint="done">
             </div>
 
             <div class="input-group">
@@ -1185,7 +1185,7 @@
                 <input type="text" id="incomeDescriptionCustom" class="input" placeholder="Или введите свой вариант" maxlength="50" style="margin-top: 4px;">
             </div>
 
-            <div id="distributionPreview" class="distribution-preview" style="display: none; margin-bottom: 80px;">
+            <div id="distributionPreview" class="distribution-preview" style="display: none; margin-bottom: 16px;">
                 <div class="distribution-title">📊 Распределение</div>
                 <div id="distributionItems"></div>
             </div>
