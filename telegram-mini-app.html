@@ -425,9 +425,33 @@
             position: relative;
         }
         
+        /* Полноэкранное модальное окно для дохода */
+        #addIncomeModal .modal-content {
+            max-height: calc(100vh - 64px);
+            border-radius: 16px 16px 0 0;
+            padding-top: 8px;
+        }
+        
+        /* Хоум-индикатор для закрытия шторки */
+        #addIncomeModal .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 36px;
+            height: 5px;
+            background: rgba(120, 120, 128, 0.3);
+            border-radius: 3px;
+        }
+        
+        #addIncomeModal .modal-header {
+            margin-top: 16px;
+        }
+        
         /* Sticky button для модалки дохода */
         #addIncomeModal .modal-content {
-            padding-bottom: 80px;
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
         }
         
         .modal-sticky-footer {
@@ -1851,10 +1875,11 @@
         function renderDescriptionPicker() {
             const container = document.getElementById('descriptionPicker');
             
-            // Более компактный вид - только эмодзи
+            // Эмодзи + подпись
             container.innerHTML = defaultDescriptions.map(desc => `
-                <div class="emoji-option description-option" data-value="${desc.label}" onclick="selectDescription(event, '${desc.label}')" title="${desc.label}">
+                <div class="emoji-option description-option" data-value="${desc.label}" onclick="selectDescription(event, '${desc.label}')">
                     <span>${desc.emoji}</span>
+                    <span>${desc.label}</span>
                 </div>
             `).join('');
         }
