@@ -742,8 +742,17 @@
         }
 
         .history-actions .btn {
-            font-size: 14px;
-            padding: 8px 12px;
+            font-size: 13px;
+            padding: 6px 12px;
+            min-height: auto;
+            background: transparent;
+            color: var(--apple-red);
+            box-shadow: none;
+            border: 1px solid var(--separator);
+        }
+        
+        .history-actions .btn:active {
+            background: rgba(255, 59, 48, 0.1);
         }
 
         /* Loading & Empty States */
@@ -2031,6 +2040,10 @@
                     // Разбивка по целям из distributed (новый формат бэкенда - массив объектов)
                     let distributionHtml = '';
                     if (item.distributed && Array.isArray(item.distributed) && item.distributed.length > 0) {
+                        // Считаем распределенную сумму
+                        const distributedTotal = item.distributed.reduce((sum, dist) => sum + (dist.amount || 0), 0);
+                        const freeAmount = item.amount - distributedTotal;
+                        
                         const distributionItems = item.distributed
                             .map(dist => {
                                 return `
@@ -2045,10 +2058,22 @@
                             })
                             .join('');
                         
+                        // Добавляем свободные средства если есть остаток
+                        const freeAmountHtml = freeAmount > 0 ? `
+                            <div class="history-distribution-item">
+                                <div class="history-distribution-label">
+                                    <span class="history-distribution-emoji">💸</span>
+                                    <span>Свободные</span>
+                                </div>
+                                <div class="history-distribution-amount">${formatNumber(freeAmount)} ₽</div>
+                            </div>
+                        ` : '';
+                        
                         distributionHtml = `
                             <div class="history-distribution">
                                 <div class="history-distribution-title">📊 Распределение</div>
                                 ${distributionItems}
+                                ${freeAmountHtml}
                             </div>
                         `;
                     }
@@ -2062,8 +2087,8 @@
                             ${distributionHtml}
                             ${index === 0 ? `
                                 <div class="history-actions">
-                                    <button class="btn btn-danger" onclick="undoIncome(${item.id})">
-                                        🔙 Отменить
+                                    <button class="btn" onclick="undoIncome(${item.id})">
+                                        Отменить
                                     </button>
                                 </div>
                             ` : ''}
