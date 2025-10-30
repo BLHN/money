@@ -1070,6 +1070,25 @@
                 <input type="number" id="incomeAmount" class="input" placeholder="Введите сумму" min="1" step="1" inputmode="decimal" pattern="[0-9]*" enterkeyhint="done">
             </div>
 
+            <div class="input-group">
+                <label class="input-label">Описание (необязательно)</label>
+                <select id="incomeDescription" class="input" style="cursor: pointer;">
+                    <option value="">Не указано</option>
+                    <option value="Зарплата">💼 Зарплата</option>
+                    <option value="Премия">🏆 Премия</option>
+                    <option value="Подарок">🎁 Подарок</option>
+                    <option value="Фриланс">💻 Фриланс</option>
+                    <option value="Инвестиции">📈 Инвестиции</option>
+                    <option value="Подработка">⚡ Подработка</option>
+                    <option value="Бонус">🎯 Бонус</option>
+                    <option value="Кэшбэк">💳 Кэшбэк</option>
+                    <option value="Возврат">🔄 Возврат</option>
+                    <option value="Другое">💸 Другое</option>
+                    <option value="custom">✏️ Свой вариант...</option>
+                </select>
+                <input type="text" id="incomeDescriptionCustom" class="input" placeholder="Введите свой вариант" style="display: none; margin-top: 8px;" maxlength="50">
+            </div>
+
             <div id="distributionPreview" class="distribution-preview" style="display: none;">
                 <div class="distribution-title">📊 Распределение</div>
                 <div id="distributionItems"></div>
@@ -1082,21 +1101,21 @@
         </div>
     </div>
 
-    <!-- Confirm Income Modal -->
-    <div id="confirmIncomeModal" class="modal">
+    <!-- Confirm Undo Modal -->
+    <div id="confirmUndoModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title">✅ Подтвердите доход</div>
-                <button class="modal-close" onclick="closeConfirmIncomeModal()">×</button>
+                <div class="modal-title" id="confirmUndoTitle">🔙 Отменить доход</div>
+                <button class="modal-close" onclick="closeConfirmUndoModal()">×</button>
             </div>
             
             <div class="confirm-dialog">
-                <div class="confirm-message">Вы уверены, что хотите добавить доход?</div>
-                <div class="confirm-detail" id="confirmDetails"></div>
+                <div class="confirm-detail" id="confirmUndoDetails"></div>
+                <div class="confirm-message" style="margin-top: 12px;">Вы уверены? Это вернет средства из всех целей.</div>
                 
                 <div class="btn-group">
-                    <button class="btn btn-secondary" onclick="closeConfirmIncomeModal()">Отмена</button>
-                    <button class="btn btn-primary" onclick="confirmIncome()">Подтвердить</button>
+                    <button class="btn btn-secondary" onclick="closeConfirmUndoModal()">Отмена</button>
+                    <button class="btn btn-primary" style="background: var(--apple-red); box-shadow: 0 4px 12px rgba(255, 59, 48, 0.25);" onclick="confirmUndoIncome()">Отменить доход</button>
                 </div>
             </div>
         </div>
@@ -1396,7 +1415,7 @@
             });
         }
 
-        async function addIncome(amount) {
+        async function addIncome(amount, description = null) {
             // Calculate distribution on frontend
             const distributed = {};
             for (const goal of state.goals) {
@@ -1409,7 +1428,7 @@
                     userId: USER_ID,
                     amount: amount,
                     distributed: distributed,
-                    notes: null
+                    notes: description
                 }
             });
         }
@@ -1886,6 +1905,9 @@
             
             document.getElementById('addIncomeModal').classList.add('active');
             document.getElementById('incomeAmount').value = '';
+            document.getElementById('incomeDescription').value = '';
+            document.getElementById('incomeDescriptionCustom').value = '';
+            document.getElementById('incomeDescriptionCustom').style.display = 'none';
             document.getElementById('distributionPreview').style.display = 'none';
             clearMessage('incomeModalError');
             
@@ -1903,10 +1925,26 @@
 
         // Update distribution preview on input
         document.addEventListener('DOMContentLoaded', () => {
-            const input = document.getElementById('incomeAmount');
-            if (!input) return;
+            const amountInput = document.getElementById('incomeAmount');
+            const descSelect = document.getElementById('incomeDescription');
+            const descCustom = document.getElementById('incomeDescriptionCustom');
+            
+            if (!amountInput) return;
 
-            input.addEventListener('input', (e) => {
+            // Обработка выбора описания
+            if (descSelect) {
+                descSelect.addEventListener('change', (e) => {
+                    if (e.target.value === 'custom') {
+                        descCustom.style.display = 'block';
+                        setTimeout(() => descCustom.focus(), 100);
+                    } else {
+                        descCustom.style.display = 'none';
+                        descCustom.value = '';
+                    }
+                });
+            }
+
+            amountInput.addEventListener('input', (e) => {
                 const amount = parseFloat(e.target.value);
                 if (amount > 0 && state.goals.length > 0) {
                     const distribution = state.goals.map(goal => ({
@@ -1935,6 +1973,16 @@
 
         async function submitIncome() {
             const amount = parseFloat(document.getElementById('incomeAmount').value);
+            const descSelect = document.getElementById('incomeDescription').value;
+            const descCustom = document.getElementById('incomeDescriptionCustom').value;
+            
+            // Определяем итоговое описание
+            let description = null;
+            if (descSelect === 'custom' && descCustom.trim()) {
+                description = descCustom.trim();
+            } else if (descSelect && descSelect !== 'custom') {
+                description = descSelect;
+            }
             
             if (!amount || amount <= 0) {
                 showError('incomeModalError', 'Введите корректную сумму');
@@ -1950,8 +1998,7 @@
             btn.disabled = true;
 
             try {
-                // Backend doesn't support require_confirmation, always add directly
-                await addIncome(amount);
+                await addIncome(amount, description);
                 
                 haptic('success');
                 closeAddIncomeModal();
@@ -1969,49 +2016,57 @@
             }
         }
 
-        // ====== CONFIRM INCOME MODAL ======
-        function showConfirmIncomeModal() {
-            if (!state.pendingIncome) return;
+        // ====== CONFIRM UNDO MODAL ======
+        let pendingUndoTransaction = null;
 
-            const modal = document.getElementById('confirmIncomeModal');
-            const details = document.getElementById('confirmDetails');
-
-            const distributionHtml = Object.entries(state.pendingIncome.distribution || {})
-                .map(([goalName, amount]) => `<div>${goalName}: ${formatNumber(amount)} ₽</div>`)
-                .join('');
+        function showConfirmUndoModal(transactionId, amount, dateStr) {
+            pendingUndoTransaction = { transactionId, amount, dateStr };
+            
+            const modal = document.getElementById('confirmUndoModal');
+            const details = document.getElementById('confirmUndoDetails');
 
             details.innerHTML = `
-                <div><strong>Сумма:</strong> ${formatNumber(state.pendingIncome.amount)} ₽</div>
-                ${distributionHtml}
+                <div style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">
+                    Доход ${formatNumber(amount)} ₽
+                </div>
+                <div style="font-size: 14px; color: var(--text-secondary);">
+                    от ${dateStr}
+                </div>
             `;
 
             modal.classList.add('active');
         }
 
-        function closeConfirmIncomeModal() {
+        function closeConfirmUndoModal() {
             haptic('light');
-            const modal = document.getElementById('confirmIncomeModal');
+            const modal = document.getElementById('confirmUndoModal');
             modal.classList.add('closing');
             setTimeout(() => {
                 modal.classList.remove('active', 'closing');
-                state.pendingIncome = null;
+                pendingUndoTransaction = null;
             }, 300);
         }
 
-        async function confirmIncome() {
-            if (!state.pendingIncome) return;
-
-            haptic('medium');
+        async function confirmUndoIncome() {
+            if (!pendingUndoTransaction) return;
+            
+            const { transactionId } = pendingUndoTransaction;
+            haptic('heavy');
 
             try {
-                await addIncome(state.pendingIncome.amount);
+                await apiRequest(`/income/${USER_ID}/${transactionId}`, {
+                    method: 'DELETE'
+                });
+                
                 haptic('success');
-                closeConfirmIncomeModal();
+                closeConfirmUndoModal();
                 await renderGoals();
-                tg.showAlert('✅ Доход подтвержден!');
+                await renderHistory();
+                showToast('🔙 Доход отменен');
 
             } catch (error) {
                 haptic('error');
+                closeConfirmUndoModal();
                 tg.showAlert('Ошибка: ' + error.message);
             }
         }
@@ -2036,6 +2091,14 @@
 
                 const historyHtml = state.history.map((item, index) => {
                     const date = new Date(item.date);
+                    
+                    // Описание дохода (если есть)
+                    const descriptionHtml = item.notes ? `
+                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                            <span style="font-size: 12px; color: var(--text-secondary);">📝</span>
+                            <span style="font-size: 13px; color: var(--text-secondary);">${item.notes}</span>
+                        </div>
+                    ` : '';
                     
                     // Разбивка по целям из distributed (новый формат бэкенда - массив объектов)
                     let distributionHtml = '';
@@ -2084,6 +2147,7 @@
                                 <div class="history-amount">+${formatNumber(item.amount)} ₽</div>
                                 <div class="history-date">${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                             </div>
+                            ${descriptionHtml}
                             ${distributionHtml}
                             ${index === 0 ? `
                                 <div class="history-actions">
@@ -2103,27 +2167,9 @@
             }
         }
 
-        async function undoIncome(transactionId, amount, dateStr) {
-            const confirmed = confirm(`Доход ${formatNumber(amount)} ₽ от ${dateStr}\n\nВы уверены, что хотите отменить этот доход? Это вернет средства из всех целей.`);
-            if (!confirmed) return;
-
-            haptic('heavy');
-
-            try {
-                // Используем API для удаления конкретной транзакции по ID
-                await apiRequest(`/income/${USER_ID}/${transactionId}`, {
-                    method: 'DELETE'
-                });
-                
-                haptic('success');
-                await renderGoals();
-                await renderHistory();
-                showToast('🔙 Доход отменен');
-
-            } catch (error) {
-                haptic('error');
-                tg.showAlert('Ошибка: ' + error.message);
-            }
+        function undoIncome(transactionId, amount, dateStr) {
+            haptic('medium');
+            showConfirmUndoModal(transactionId, amount, dateStr);
         }
 
         // ====== STATISTICS ======
@@ -2325,7 +2371,7 @@
                 if (e.target === e.currentTarget) {
                     const closeFunction = modal.id === 'goalModal' ? closeGoalModal :
                                         modal.id === 'addIncomeModal' ? closeAddIncomeModal :
-                                        modal.id === 'confirmIncomeModal' ? closeConfirmIncomeModal : null;
+                                        modal.id === 'confirmUndoModal' ? closeConfirmUndoModal : null;
                     if (closeFunction) closeFunction();
                 }
             });
