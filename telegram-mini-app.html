@@ -148,36 +148,19 @@
             align-items: center;
             justify-content: center;
             gap: 2px;
-            padding: 6px 8px;
+            padding: 8px 4px;
             cursor: pointer;
             transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
             color: var(--text-secondary);
-            border-radius: 10px;
-            margin: 0 2px;
+            border-radius: 12px;
+            margin: 0 4px;
             position: relative;
+            background: transparent;
         }
 
         .nav-item.active {
             color: var(--apple-blue);
-        }
-        
-        .nav-item.active::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 64px;
-            height: 40px;
             background: rgba(0, 122, 255, 0.1);
-            border-radius: 10px;
-            z-index: -1;
-            opacity: 0;
-            animation: tabActivate 0.3s ease forwards;
-        }
-        
-        @keyframes tabActivate {
-            to { opacity: 1; }
         }
 
         .nav-item:active {
