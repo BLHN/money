@@ -473,6 +473,31 @@
             gap: 6px;
             width: 100%;
             letter-spacing: -0.4px;
+            position: relative;
+        }
+
+        .btn.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .btn.loading .btn-text {
+            opacity: 0;
+        }
+
+        .btn-spinner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            display: none;
+        }
+
+        .btn.loading .btn-spinner {
+            display: block;
         }
 
         .btn:active {
@@ -778,6 +803,11 @@
         }
 
         @keyframes slideDown {
+            from { transform: translateY(0); }
+            to { transform: translateY(100%); }
+        }
+
+        @keyframes slideDown {
             from { 
                 opacity: 0;
                 transform: translateX(-50%) translateY(-20px);
@@ -804,6 +834,10 @@
         .modal.active {
             display: flex;
             align-items: flex-end;
+        }
+
+        .modal.closing .modal-content {
+            animation: slideDown 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
         }
 
         .modal-content {
@@ -983,8 +1017,9 @@
                 <div id="distributionItems"></div>
             </div>
 
-            <button class="btn btn-primary" style="margin-top: 16px;" onclick="submitIncome()">
-                <span>✅</span> Добавить
+            <button class="btn btn-primary" id="submitIncomeBtn" style="margin-top: 16px;" onclick="submitIncome()">
+                <span class="btn-text"><span>✅</span> Добавить</span>
+                <div class="btn-spinner"></div>
             </button>
         </div>
     </div>
@@ -1693,8 +1728,12 @@
 
         function closeGoalModal() {
             haptic('light');
-            document.getElementById('goalModal').classList.remove('active');
-            state.currentEditingGoal = null;
+            const modal = document.getElementById('goalModal');
+            modal.classList.add('closing');
+            setTimeout(() => {
+                modal.classList.remove('active', 'closing');
+                state.currentEditingGoal = null;
+            }, 300);
         }
 
         async function saveGoal() {
@@ -1797,7 +1836,11 @@
 
         function closeAddIncomeModal() {
             haptic('light');
-            document.getElementById('addIncomeModal').classList.remove('active');
+            const modal = document.getElementById('addIncomeModal');
+            modal.classList.add('closing');
+            setTimeout(() => {
+                modal.classList.remove('active', 'closing');
+            }, 300);
         }
 
         // Update distribution preview on input
@@ -1843,6 +1886,11 @@
             clearMessage('incomeModalError');
             haptic('medium');
 
+            // Показываем индикатор загрузки
+            const btn = document.getElementById('submitIncomeBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
             try {
                 // Backend doesn't support require_confirmation, always add directly
                 await addIncome(amount);
@@ -1854,6 +1902,10 @@
 
             } catch (error) {
                 showError('incomeModalError', error.message);
+            } finally {
+                // Убираем индикатор загрузки
+                btn.classList.remove('loading');
+                btn.disabled = false;
             }
         }
 
@@ -1878,8 +1930,12 @@
 
         function closeConfirmIncomeModal() {
             haptic('light');
-            document.getElementById('confirmIncomeModal').classList.remove('active');
-            state.pendingIncome = null;
+            const modal = document.getElementById('confirmIncomeModal');
+            modal.classList.add('closing');
+            setTimeout(() => {
+                modal.classList.remove('active', 'closing');
+                state.pendingIncome = null;
+            }, 300);
         }
 
         async function confirmIncome() {
