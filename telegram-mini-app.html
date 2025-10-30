@@ -1018,6 +1018,19 @@
             margin-bottom: 16px;
             font-size: 14px;
         }
+        
+        /* Фиксированный размер кнопки подтверждения отмены */
+        #confirmUndoBtn {
+            width: 100%;
+            min-height: 52px;
+            max-height: 52px;
+        }
+        
+        /* Фиксируем размеры для всех кнопок в истории */
+        .history-actions .btn {
+            min-width: 100px;
+            width: 100%;
+        }
 
         /* Debug Panel */
         .debug-panel {
@@ -1420,14 +1433,32 @@
                 const data = await response.json();
                 console.log('📥 API Response:', data);
 
-                if (!response.ok || !data.success) {
-                    console.error('❌ API Error:', {
+                // Детальная проверка ответа
+                if (!response.ok) {
+                    console.error('❌ HTTP Error:', {
                         status: response.status,
-                        error: data.error,
-                        details: data.details
+                        statusText: response.statusText,
+                        url: url,
+                        data: data
                     });
-                    throw new Error(data.error || `HTTP ${response.status}`);
+                    throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
                 }
+                
+                if (!data.success) {
+                    console.error('❌ API Error (success=false):', {
+                        error: data.error,
+                        details: data.details,
+                        data: data
+                    });
+                    throw new Error(data.error || 'Операция не выполнена (success=false)');
+                }
+                
+                // Логируем успешный ответ для отладки
+                console.log('✅ API Success:', {
+                    endpoint: endpoint,
+                    method: method,
+                    hasData: !!data.data
+                });
 
                 return data;
             } catch (error) {
@@ -2187,22 +2218,79 @@
             btn.disabled = true;
 
             try {
-                await apiRequest(`/income/${USER_ID}/${transactionId}`, {
+                console.log('🔄 Начинаем отмену транзакции:', transactionId);
+                
+                const response = await apiRequest(`/income/${USER_ID}/${transactionId}`, {
                     method: 'DELETE'
                 });
                 
+                console.log('📥 Получен ответ от бэкенда:', response);
+                
+                // Валидация ответа от бэкенда
+                if (!response || !response.success) {
+                    throw new Error('Бэкенд вернул ошибку: ' + (response?.error || 'Неизвестная ошибка'));
+                }
+                
+                // Проверяем структуру данных
+                // Ожидаем: {success: true, data: [{goalIds: [], distributed: {}, transaction_id: "..."}]}
+                const responseData = response.data;
+                if (Array.isArray(responseData) && responseData.length > 0) {
+                    const transactionResult = responseData[0];
+                    console.log('✅ Структура данных корректна:', {
+                        goalIds: transactionResult.goalIds?.length || 0,
+                        distributed: Object.keys(transactionResult.distributed || {}).length,
+                        transaction_id: transactionResult.transaction_id
+                    });
+                } else if (responseData && typeof responseData === 'object') {
+                    // Альтернативная структура (если бэкенд изменил формат)
+                    console.log('✅ Альтернативная структура данных:', responseData);
+                } else {
+                    console.warn('⚠️ Неожиданная структура ответа, но success=true:', response);
+                }
+                
                 haptic('success');
+                
+                // Закрываем модальное окно
                 closeConfirmUndoModal();
                 
-                // Обновляем обе страницы
-                await renderGoals();
-                await renderHistory();
+                // Добавляем задержку для синхронизации с бэкендом (500ms вместо 300ms)
+                console.log('⏳ Ожидание синхронизации с бэкендом...');
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
+                console.log('🔄 Обновляем UI...');
+                
+                // Обновляем обе страницы параллельно
+                await Promise.all([
+                    renderGoals(),
+                    renderHistory()
+                ]);
+                
+                console.log('✅ UI обновлен успешно');
                 showToast('🔙 Доход отменен');
 
             } catch (error) {
+                console.error('❌ Ошибка отмены транзакции:', {
+                    message: error.message,
+                    stack: error.stack,
+                    transactionId: transactionId
+                });
+                
                 haptic('error');
-                tg.showAlert('Ошибка: ' + error.message);
+                closeConfirmUndoModal();
+                
+                // Показываем понятное сообщение об ошибке
+                const errorMessage = error.message || 'Не удалось отменить транзакцию';
+                tg.showAlert('❌ Ошибка: ' + errorMessage);
+                
+                // Пробуем обновить UI даже при ошибке (на случай если бэкенд выполнил операцию)
+                try {
+                    await Promise.all([
+                        renderGoals(),
+                        renderHistory()
+                    ]);
+                } catch (uiError) {
+                    console.error('❌ Не удалось обновить UI:', uiError);
+                }
             } finally {
                 // Убираем индикатор загрузки
                 btn.classList.remove('loading');
