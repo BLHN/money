@@ -474,6 +474,7 @@
             width: 100%;
             letter-spacing: -0.4px;
             position: relative;
+            min-height: 52px; /* Фиксированная высота для предотвращения изменений при загрузке */
         }
 
         .btn.loading {
@@ -482,22 +483,26 @@
         }
 
         .btn.loading .btn-text {
-            opacity: 0;
+            visibility: hidden;
         }
 
         .btn-spinner {
             position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
             width: 20px;
             height: 20px;
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-top-color: white;
             border-radius: 50%;
             animation: spin 0.6s linear infinite;
-            display: none;
+            opacity: 0;
+            pointer-events: none;
         }
 
         .btn.loading .btn-spinner {
-            display: block;
+            opacity: 1;
         }
 
         .btn:active {
@@ -678,12 +683,56 @@
         .history-amount {
             font-size: 20px;
             font-weight: 700;
-            color: var(--success-color);
+            color: var(--apple-green);
         }
 
         .history-date {
             font-size: 12px;
             color: var(--tg-theme-hint-color);
+        }
+
+        .history-distribution {
+            background: rgba(120, 120, 128, 0.08);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+
+        .history-distribution-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .history-distribution-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+        }
+
+        .history-distribution-item:not(:last-child) {
+            border-bottom: 1px solid var(--separator);
+        }
+
+        .history-distribution-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .history-distribution-emoji {
+            font-size: 16px;
+        }
+
+        .history-distribution-amount {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
         .history-actions {
@@ -807,12 +856,12 @@
             to { transform: translateY(100%); }
         }
 
-        @keyframes slideDown {
-            from { 
+        @keyframes toastSlideDown {
+            from {
                 opacity: 0;
                 transform: translateX(-50%) translateY(-20px);
             }
-            to { 
+            to {
                 opacity: 1;
                 transform: translateX(-50%) translateY(0);
             }
@@ -1647,7 +1696,7 @@
                 backdrop-filter: blur(10px);
                 -webkit-backdrop-filter: blur(10px);
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                animation: slideDown 0.3s ease;
+                animation: toastSlideDown 0.3s ease;
             `;
             
             document.body.appendChild(toast);
@@ -1898,7 +1947,9 @@
                 haptic('success');
                 closeAddIncomeModal();
                 await renderGoals();
-                tg.showAlert('✅ Доход добавлен и распределен!');
+                
+                // Показываем toast вместо alert
+                showToast('✅ Доход добавлен и распределен!');
 
             } catch (error) {
                 showError('incomeModalError', error.message);
@@ -1976,12 +2027,46 @@
 
                 const historyHtml = state.history.map((item, index) => {
                     const date = new Date(item.date);
+                    
+                    // Разбивка по целям из distributed_amounts
+                    let distributionHtml = '';
+                    if (item.distributed_amounts && typeof item.distributed_amounts === 'object') {
+                        const distributionItems = Object.entries(item.distributed_amounts)
+                            .map(([goalId, amount]) => {
+                                // Находим цель по ID
+                                const goal = state.goals.find(g => g.id === parseInt(goalId));
+                                if (!goal) return null;
+                                
+                                return `
+                                    <div class="history-distribution-item">
+                                        <div class="history-distribution-label">
+                                            <span class="history-distribution-emoji">${goal.emoji}</span>
+                                            <span>${goal.goal_name}</span>
+                                        </div>
+                                        <div class="history-distribution-amount">${formatNumber(amount)} ₽</div>
+                                    </div>
+                                `;
+                            })
+                            .filter(item => item !== null)
+                            .join('');
+                        
+                        if (distributionItems) {
+                            distributionHtml = `
+                                <div class="history-distribution">
+                                    <div class="history-distribution-title">📊 Распределение</div>
+                                    ${distributionItems}
+                                </div>
+                            `;
+                        }
+                    }
+                    
                     return `
                         <div class="history-item" style="animation-delay: ${index * 0.05}s;">
                             <div class="history-header">
                                 <div class="history-amount">+${formatNumber(item.amount)} ₽</div>
                                 <div class="history-date">${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                             </div>
+                            ${distributionHtml}
                             ${index === 0 ? `
                                 <div class="history-actions">
                                     <button class="btn btn-danger" onclick="undoIncome(${item.id})">
