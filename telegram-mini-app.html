@@ -1058,7 +1058,7 @@
             
             <div class="input-group">
                 <label class="input-label">Сумма (₽)</label>
-                <input type="number" id="incomeAmount" class="input" placeholder="Введите сумму" min="1" step="1">
+                <input type="number" id="incomeAmount" class="input" placeholder="Введите сумму" min="1" step="1" inputmode="decimal" pattern="[0-9]*" enterkeyhint="done">
             </div>
 
             <div id="distributionPreview" class="distribution-preview" style="display: none;">
@@ -2028,36 +2028,29 @@
                 const historyHtml = state.history.map((item, index) => {
                     const date = new Date(item.date);
                     
-                    // Разбивка по целям из distributed_amounts
+                    // Разбивка по целям из distributed (новый формат бэкенда - массив объектов)
                     let distributionHtml = '';
-                    if (item.distributed_amounts && typeof item.distributed_amounts === 'object') {
-                        const distributionItems = Object.entries(item.distributed_amounts)
-                            .map(([goalId, amount]) => {
-                                // Находим цель по ID
-                                const goal = state.goals.find(g => g.id === parseInt(goalId));
-                                if (!goal) return null;
-                                
+                    if (item.distributed && Array.isArray(item.distributed) && item.distributed.length > 0) {
+                        const distributionItems = item.distributed
+                            .map(dist => {
                                 return `
                                     <div class="history-distribution-item">
                                         <div class="history-distribution-label">
-                                            <span class="history-distribution-emoji">${goal.emoji}</span>
-                                            <span>${goal.goal_name}</span>
+                                            <span class="history-distribution-emoji">${dist.emoji}</span>
+                                            <span>${dist.goal_name}</span>
                                         </div>
-                                        <div class="history-distribution-amount">${formatNumber(amount)} ₽</div>
+                                        <div class="history-distribution-amount">${formatNumber(dist.amount)} ₽</div>
                                     </div>
                                 `;
                             })
-                            .filter(item => item !== null)
                             .join('');
                         
-                        if (distributionItems) {
-                            distributionHtml = `
-                                <div class="history-distribution">
-                                    <div class="history-distribution-title">📊 Распределение</div>
-                                    ${distributionItems}
-                                </div>
-                            `;
-                        }
+                        distributionHtml = `
+                            <div class="history-distribution">
+                                <div class="history-distribution-title">📊 Распределение</div>
+                                ${distributionItems}
+                            </div>
+                        `;
                     }
                     
                     return `
