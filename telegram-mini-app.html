@@ -44,7 +44,8 @@
             --apple-red: #FF3B30;
             --apple-orange: #FF9500;
             --apple-gray: #8E8E93;
-            --apple-separator: rgba(60, 60, 67, 0.18);
+            --apple-separator-light: rgba(60, 60, 67, 0.18);
+            --apple-separator-dark: rgba(84, 84, 88, 0.65);
             
             /* Dynamic colors - будут переопределены в JS */
             --bg-primary: #F2F2F7;
@@ -54,10 +55,13 @@
             --separator: rgba(60, 60, 67, 0.18);
             --card-bg: #FFFFFF;
             --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            --input-bg: rgba(120, 120, 128, 0.12);
+            --card-bg-rgb: 255, 255, 255;
             
-            /* Tab bar */
-            --tab-bar-height: 84px;
+            /* Tab bar - улучшенные размеры для Apple стиля */
+            --tab-bar-height: 72px;
             --add-button-size: 56px;
+            --add-button-offset: 20px; /* отступ кнопки над таббаром */
         }
 
         body {
@@ -70,47 +74,71 @@
             padding-bottom: 170px; /* Отступ под кнопку + таббар */
         }
 
-        /* Floating Add Income Button */
+        /* Floating Add Income Button - Apple стиль с улучшенным позиционированием */
         .add-income-floating {
             position: fixed;
-            bottom: calc(var(--tab-bar-height) + 16px);
+            bottom: calc(var(--tab-bar-height) + var(--add-button-offset));
             left: 50%;
             transform: translateX(-50%);
             width: var(--add-button-size);
             height: var(--add-button-size);
-            background: var(--apple-blue);
+            background: linear-gradient(135deg, #007AFF 0%, #0055FF 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 22px;
             color: white;
-            box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4);
+            box-shadow:
+                0 4px 12px rgba(0, 122, 255, 0.3),
+                0 8px 24px rgba(0, 122, 255, 0.2),
+                0 0 0 0.5px rgba(255, 255, 255, 0.2) inset;
             z-index: 100;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
         .add-income-floating:active {
-            transform: translateX(-50%) scale(0.9);
-            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+            transform: translateX(-50%) scale(0.92);
+            box-shadow:
+                0 2px 8px rgba(0, 122, 255, 0.4),
+                0 4px 16px rgba(0, 122, 255, 0.25);
+        }
+        
+        .add-income-floating::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 100%);
+            border-radius: 50%;
+            opacity: 0.6;
+            pointer-events: none;
         }
 
-        /* Bottom Navigation */
+        /* Bottom Navigation - Apple стиль с улучшенным блюром */
         .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 0.5px solid var(--separator);
+            height: var(--tab-bar-height);
+            background: rgba(var(--card-bg-rgb), 0.85);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-top: 0.33px solid var(--separator);
             display: flex;
             justify-content: space-around;
-            padding: 8px 0 calc(env(safe-area-inset-bottom) + 4px) 0;
+            align-items: center;
+            padding: 0 max(env(safe-area-inset-right), 8px) env(safe-area-inset-bottom) max(env(safe-area-inset-left), 8px);
             z-index: 50;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
+            box-shadow:
+                0 -1px 0 0 rgba(0, 0, 0, 0.04),
+                0 -4px 16px rgba(0, 0, 0, 0.08);
         }
 
         .nav-item {
@@ -118,29 +146,59 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
-            padding: 8px;
+            justify-content: center;
+            gap: 2px;
+            padding: 6px 8px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
             color: var(--text-secondary);
+            border-radius: 10px;
+            margin: 0 2px;
+            position: relative;
         }
 
         .nav-item.active {
             color: var(--apple-blue);
         }
+        
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 64px;
+            height: 40px;
+            background: rgba(0, 122, 255, 0.1);
+            border-radius: 10px;
+            z-index: -1;
+            opacity: 0;
+            animation: tabActivate 0.3s ease forwards;
+        }
+        
+        @keyframes tabActivate {
+            to { opacity: 1; }
+        }
 
         .nav-item:active {
-            transform: scale(0.95);
+            transform: scale(0.92);
+            opacity: 0.6;
         }
 
         .nav-icon {
-            font-size: 24px;
+            font-size: 26px;
             line-height: 1;
+            transition: transform 0.2s ease;
+        }
+        
+        .nav-item.active .nav-icon {
+            transform: scale(1.08);
         }
 
         .nav-label {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
+            letter-spacing: -0.1px;
         }
 
         /* Content Pages */
@@ -355,13 +413,35 @@
         }
 
         .modal-content {
-            background: var(--tg-theme-bg-color);
-            border-radius: 16px 16px 0 0;
+            background: var(--card-bg);
+            border-radius: 20px 20px 0 0;
             padding: 24px;
+            padding-bottom: calc(24px + env(safe-area-inset-bottom));
             width: 100%;
-            max-height: 80vh;
+            max-height: 90vh;
             overflow-y: auto;
-            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideUp 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+        
+        /* Sticky button для модалки дохода */
+        #addIncomeModal .modal-content {
+            padding-bottom: 80px;
+        }
+        
+        .modal-sticky-footer {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            padding: 16px 0 calc(env(safe-area-inset-bottom) + 16px) 0;
+            margin: 0 -24px;
+            padding-left: 24px;
+            padding-right: 24px;
+            border-top: 0.5px solid var(--separator);
+            z-index: 10;
         }
 
         .modal-header {
@@ -409,15 +489,16 @@
             border: none;
             border-radius: 12px;
             font-size: 17px;
-            background: rgba(120, 120, 128, 0.12);
-            color: var(--tg-theme-text-color);
+            background: var(--input-bg);
+            color: var(--text-primary);
             transition: all 0.2s ease;
             letter-spacing: -0.4px;
         }
 
         .input:focus {
             outline: none;
-            background: rgba(120, 120, 128, 0.16);
+            background: var(--input-bg);
+            opacity: 1.2;
             box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
         }
 
@@ -1076,19 +1157,21 @@
 
             <div class="input-group">
                 <label class="input-label">Описание (необязательно)</label>
-                <div class="emoji-picker-container" id="descriptionPicker"></div>
-                <input type="text" id="incomeDescriptionCustom" class="input" placeholder="Или введите свой вариант" maxlength="50">
+                <div class="emoji-picker-container" id="descriptionPicker" style="gap: 4px;"></div>
+                <input type="text" id="incomeDescriptionCustom" class="input" placeholder="Или введите свой вариант" maxlength="50" style="margin-top: 4px;">
             </div>
 
-            <div id="distributionPreview" class="distribution-preview" style="display: none;">
+            <div id="distributionPreview" class="distribution-preview" style="display: none; margin-bottom: 80px;">
                 <div class="distribution-title">📊 Распределение</div>
                 <div id="distributionItems"></div>
             </div>
 
-            <button class="btn btn-primary" id="submitIncomeBtn" style="margin-top: 16px;" onclick="submitIncome()">
-                <span class="btn-text"><span>✅</span> Добавить</span>
-                <div class="btn-spinner"></div>
-            </button>
+            <div class="modal-sticky-footer">
+                <button class="btn btn-primary" id="submitIncomeBtn" onclick="submitIncome()">
+                    <span class="btn-text"><span>✅</span> Добавить</span>
+                    <div class="btn-spinner"></div>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1123,6 +1206,16 @@
         if (theme.bg_color) document.documentElement.style.setProperty('--tg-theme-bg-color', theme.bg_color);
 
         // ===== DYNAMIC THEMING BASED ON TELEGRAM =====
+        // Helper: конвертируем HEX в RGB для backdrop-filter
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 255, g: 255, b: 255 };
+        }
+        
         function isDarkTheme() {
             const bgColor = theme.bg_color || '#ffffff';
             // Парсим HEX в RGB
@@ -1147,6 +1240,12 @@
             document.documentElement.style.setProperty('--separator', 'rgba(84, 84, 88, 0.65)');
             document.documentElement.style.setProperty('--card-bg', theme.secondary_bg_color || '#2C2C2E');
             document.documentElement.style.setProperty('--card-shadow', '0 2px 10px rgba(0, 0, 0, 0.3)');
+            document.documentElement.style.setProperty('--input-bg', 'rgba(118, 118, 128, 0.24)');
+            
+            // RGB для backdrop-filter
+            const secondaryBg = theme.secondary_bg_color || '#2C2C2E';
+            const rgb = hexToRgb(secondaryBg);
+            document.documentElement.style.setProperty('--card-bg-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
         } else {
             // Light mode colors
             document.documentElement.style.setProperty('--bg-primary', theme.secondary_bg_color || '#F2F2F7');
@@ -1156,6 +1255,12 @@
             document.documentElement.style.setProperty('--separator', 'rgba(60, 60, 67, 0.18)');
             document.documentElement.style.setProperty('--card-bg', theme.bg_color || '#FFFFFF');
             document.documentElement.style.setProperty('--card-shadow', '0 2px 10px rgba(0, 0, 0, 0.04)');
+            document.documentElement.style.setProperty('--input-bg', 'rgba(120, 120, 128, 0.12)');
+            
+            // RGB для backdrop-filter
+            const bgColor = theme.bg_color || '#FFFFFF';
+            const rgb = hexToRgb(bgColor);
+            document.documentElement.style.setProperty('--card-bg-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
         }
 
         console.log('🎨 Theme applied:', dark ? 'Dark' : 'Light');
@@ -1746,10 +1851,10 @@
         function renderDescriptionPicker() {
             const container = document.getElementById('descriptionPicker');
             
+            // Более компактный вид - только эмодзи
             container.innerHTML = defaultDescriptions.map(desc => `
-                <div class="emoji-option description-option" data-value="${desc.label}" onclick="selectDescription(event, '${desc.label}')">
+                <div class="emoji-option description-option" data-value="${desc.label}" onclick="selectDescription(event, '${desc.label}')" title="${desc.label}">
                     <span>${desc.emoji}</span>
-                    <span>${desc.label}</span>
                 </div>
             `).join('');
         }
