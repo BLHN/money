@@ -2087,7 +2087,7 @@
                             ${distributionHtml}
                             ${index === 0 ? `
                                 <div class="history-actions">
-                                    <button class="btn" onclick="undoIncome(${item.id})">
+                                    <button class="btn" onclick="undoIncome('${item.transaction_id}', ${item.amount}, '${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}')">
                                         Отменить
                                     </button>
                                 </div>
@@ -2103,18 +2103,22 @@
             }
         }
 
-        async function undoIncome(incomeId) {
-            const confirmed = confirm('Вы уверены, что хотите отменить последний доход? Это вернет средства из всех целей.');
+        async function undoIncome(transactionId, amount, dateStr) {
+            const confirmed = confirm(`Доход ${formatNumber(amount)} ₽ от ${dateStr}\n\nВы уверены, что хотите отменить этот доход? Это вернет средства из всех целей.`);
             if (!confirmed) return;
 
             haptic('heavy');
 
             try {
-                await undoLastIncome();
+                // Используем API для удаления конкретной транзакции по ID
+                await apiRequest(`/income/${USER_ID}/${transactionId}`, {
+                    method: 'DELETE'
+                });
+                
                 haptic('success');
                 await renderGoals();
                 await renderHistory();
-                tg.showAlert('🔙 Доход отменен');
+                showToast('🔙 Доход отменен');
 
             } catch (error) {
                 haptic('error');
