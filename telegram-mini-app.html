@@ -1788,35 +1788,57 @@
             try {
                 const data = await loadGoals();
                 
+                // ДИАГНОСТИЧЕСКОЕ ЛОГИРОВАНИЕ
+                console.log('📊 Данные от бэкенда:', {
+                    needsOnboarding: data.needsOnboarding,
+                    goalsCount: state.goals?.length || 0,
+                    goals: state.goals,
+                    onboardingCompleted: state.onboardingCompleted
+                });
+                
                 // КРИТИЧЕСКАЯ ПРОВЕРКА: Проверяем необходимость онбординга ИЛИ пустой массив целей
-                if (data.needsOnboarding || !state.goals || state.goals.length === 0) {
-                    // Если онбординг не завершен - показываем overlay
-                    if (!state.onboardingCompleted && data.needsOnboarding) {
-                        showOnboardingOverlay();
-                        container.innerHTML = ''; // Очищаем контейнер
-                        return;
-                    }
-                    
-                    // Если онбординг завершен, но целей нет - показываем пустое состояние
-                    if (state.goals.length === 0) {
-                        container.innerHTML = `
-                            <div class="empty-state">
-                                <div class="empty-emoji">🎯</div>
-                                <div>У вас пока нет целей</div>
-                                <button class="btn btn-primary" style="margin-top: 24px; max-width: 300px; margin-left: auto; margin-right: auto;" onclick="showGoalModal()">
-                                    ➕ Создать первую цель
-                                </button>
-                            </div>
-                        `;
-                        return;
-                    }
+                // Если нужен онбординг И он не завершен - показываем overlay
+                if (data.needsOnboarding && !state.onboardingCompleted) {
+                    showOnboardingOverlay();
+                    container.innerHTML = ''; // Очищаем контейнер
+                    return;
+                }
+                
+                // Если массив целей пустой - показываем пустое состояние
+                if (!state.goals || state.goals.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-emoji">🎯</div>
+                            <div>У вас пока нет целей</div>
+                            <button class="btn btn-primary" style="margin-top: 24px; max-width: 300px; margin-left: auto; margin-right: auto;" onclick="showGoalModal()">
+                                ➕ Создать первую цель
+                            </button>
+                        </div>
+                    `;
+                    return;
                 }
                 
                 // ТОЛЬКО ЕСЛИ ЦЕЛИ ЕСТЬ - продолжаем рендеринг
                 const totalBalance = state.goals.reduce((sum, g) => sum + (g.current_amount || 0), 0);
 
+                // Фильтруем некорректные цели (без имени или emoji)
+                const validGoals = state.goals.filter(goal => goal && goal.goal_name && goal.emoji);
+                
+                if (validGoals.length === 0) {
+                    console.error('❌ Все цели имеют некорректный формат:', state.goals);
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-emoji">⚠️</div>
+                            <div>Ошибка: цели имеют некорректный формат</div>
+                            <button class="btn btn-primary" style="margin-top: 24px; max-width: 300px; margin-left: auto; margin-right: auto;" onclick="location.reload()">
+                                🔄 Перезагрузить
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
 
-                const goalsHtml = state.goals.map((goal, index) => {
+                const goalsHtml = validGoals.map((goal, index) => {
                     const progress = goal.target_amount ? Math.min((goal.current_amount / goal.target_amount) * 100, 100) : 0;
                     
                     return `
@@ -2752,6 +2774,14 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="settings-section">
+                        <div class="settings-title">Отладка</div>
+                        
+                        <div class="setting-item" style="cursor: pointer;" onclick="resetOnboarding()">
+                            <div class="setting-label">🔄 Сбросить онбординг</div>
+                        </div>
+                    </div>
                 `;
 
                 state.settings.loaded = true;
@@ -2778,6 +2808,25 @@
                 haptic('error');
                 tg.showAlert('Ошибка: ' + error.message);
             }
+        }
+
+        // ====== RESET ONBOARDING ======
+        function resetOnboarding() {
+            haptic('medium');
+            const confirmed = confirm('Сбросить онбординг и показать приветственный экран?');
+            if (!confirmed) return;
+            
+            // Очищаем флаг онбординга
+            localStorage.removeItem('onboarding_completed');
+            state.onboardingCompleted = false;
+            
+            haptic('success');
+            showToast('🔄 Онбординг сброшен');
+            
+            // Перезагружаем страницу целей
+            setTimeout(() => {
+                renderGoals();
+            }, 500);
         }
 
         // ====== DEBUG PANEL ======
