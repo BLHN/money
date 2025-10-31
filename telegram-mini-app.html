@@ -2039,7 +2039,18 @@
 
         function startOnboarding() {
             haptic('medium');
+            
+            // Помечаем онбординг как завершенный
+            localStorage.setItem('onboarding_completed', 'true');
+            state.onboardingCompleted = true;
+            
+            // Скрываем overlay
             hideOnboardingOverlay();
+            
+            // Перерендериваем страницу целей (покажет пустое состояние)
+            renderGoals();
+            
+            // Показываем модалку создания цели
             showGoalModal();
         }
 
