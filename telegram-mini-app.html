@@ -553,7 +553,7 @@
 
         /* Buttons */
         .btn {
-            padding: 16px;
+            padding: 0;
             border: none;
             border-radius: 14px;
             font-size: 17px;
@@ -567,7 +567,8 @@
             width: 100%;
             letter-spacing: -0.4px;
             position: relative;
-            min-height: 52px; /* Фиксированная высота для предотвращения изменений при загрузке */
+            min-height: 52px;
+            height: 52px;
         }
 
         .btn.loading {
@@ -577,7 +578,6 @@
 
         .btn.loading .btn-text {
             opacity: 0;
-            position: absolute;
         }
 
         .btn-spinner {
@@ -591,13 +591,10 @@
             border-top-color: white;
             border-radius: 50%;
             animation: spin 0.6s linear infinite;
-            opacity: 0;
-            pointer-events: none;
             display: none;
         }
 
         .btn.loading .btn-spinner {
-            opacity: 1;
             display: block;
         }
 
@@ -1023,11 +1020,15 @@
             font-size: 14px;
         }
         
-        /* Фиксированный размер кнопки подтверждения отмены */
-        #confirmUndoBtn {
-            width: 100%;
-            min-height: 52px;
-            max-height: 52px;
+        /* Фиксированный размер кнопок с загрузкой */
+        #confirmUndoBtn,
+        #submitIncomeBtn {
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+            min-height: 52px !important;
+            max-height: 52px !important;
+            height: 52px !important;
         }
         
         /* Фиксируем размеры для всех кнопок в истории */
@@ -1294,9 +1295,9 @@
             </div>
 
             <div class="modal-sticky-footer">
-                <button class="btn btn-primary" id="submitIncomeBtn" onclick="submitIncome()" style="position: relative; min-height: 52px; max-height: 52px; height: 52px; width: 100%; min-width: 100%; display: flex; align-items: center; justify-content: center;">
+                <button class="btn btn-primary" id="submitIncomeBtn" onclick="submitIncome()">
                     <span class="btn-text"><span>✅</span> Добавить</span>
-                    <div class="btn-spinner"></div>
+                    <span class="btn-spinner"></span>
                 </button>
             </div>
         </div>
@@ -1318,7 +1319,7 @@
                     <button class="btn btn-secondary" onclick="closeConfirmUndoModal()">Отмена</button>
                     <button class="btn btn-primary" id="confirmUndoBtn" style="background: var(--apple-red); box-shadow: 0 4px 12px rgba(255, 59, 48, 0.25);" onclick="confirmUndoIncome()">
                         <span class="btn-text">Отменить доход</span>
-                        <div class="btn-spinner"></div>
+                        <span class="btn-spinner"></span>
                     </button>
                 </div>
             </div>
