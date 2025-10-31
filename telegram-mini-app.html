@@ -1788,27 +1788,33 @@
             try {
                 const data = await loadGoals();
                 
-                // Проверяем необходимость онбординга
-                if (state.needsOnboarding && !state.onboardingCompleted) {
-                    showOnboardingOverlay();
-                    container.innerHTML = ''; // Очищаем контейнер
-                    return;
+                // КРИТИЧЕСКАЯ ПРОВЕРКА: Проверяем необходимость онбординга ИЛИ пустой массив целей
+                if (data.needsOnboarding || !state.goals || state.goals.length === 0) {
+                    // Если онбординг не завершен - показываем overlay
+                    if (!state.onboardingCompleted && data.needsOnboarding) {
+                        showOnboardingOverlay();
+                        container.innerHTML = ''; // Очищаем контейнер
+                        return;
+                    }
+                    
+                    // Если онбординг завершен, но целей нет - показываем пустое состояние
+                    if (state.goals.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-emoji">🎯</div>
+                                <div>У вас пока нет целей</div>
+                                <button class="btn btn-primary" style="margin-top: 24px; max-width: 300px; margin-left: auto; margin-right: auto;" onclick="showGoalModal()">
+                                    ➕ Создать первую цель
+                                </button>
+                            </div>
+                        `;
+                        return;
+                    }
                 }
                 
+                // ТОЛЬКО ЕСЛИ ЦЕЛИ ЕСТЬ - продолжаем рендеринг
                 const totalBalance = state.goals.reduce((sum, g) => sum + (g.current_amount || 0), 0);
 
-                if (state.goals.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-emoji">🎯</div>
-                            <div>У вас пока нет целей</div>
-                            <button class="btn btn-primary" style="margin-top: 24px; max-width: 300px; margin-left: auto; margin-right: auto;" onclick="showGoalModal()">
-                                ➕ Создать первую цель
-                            </button>
-                        </div>
-                    `;
-                    return;
-                }
 
                 const goalsHtml = state.goals.map((goal, index) => {
                     const progress = goal.target_amount ? Math.min((goal.current_amount / goal.target_amount) * 100, 100) : 0;
@@ -2393,9 +2399,12 @@
         }
 
         async function confirmUndoIncome() {
-            if (!pendingUndoTransaction) return;
+            if (!pendingUndoTransaction) {
+                console.warn('⚠️ Нет pending транзакции для отмены');
+                return;
+            }
             
-            const { transactionId } = pendingUndoTransaction;
+            const { transactionId, amount } = pendingUndoTransaction;
             haptic('heavy');
 
             // Показываем индикатор загрузки
@@ -2404,84 +2413,135 @@
             btn.disabled = true;
 
             try {
-                console.log('🔄 Начинаем отмену транзакции:', transactionId);
+                console.log('🔄 Начинаем отмену транзакции:', { transactionId, amount });
                 
+                // Запрос на удаление транзакции
                 const response = await apiRequest(`/income/${USER_ID}/${transactionId}`, {
                     method: 'DELETE'
                 });
                 
-                console.log('📥 Получен ответ от бэкенда:', response);
+                console.log('📥 Получен ответ от бэкенда:', {
+                    success: response.success,
+                    hasData: !!response.data,
+                    dataType: Array.isArray(response.data) ? 'array' : typeof response.data
+                });
                 
-                // Валидация ответа от бэкенда
+                // Валидация базовой структуры ответа
                 if (!response || !response.success) {
+                    console.error('❌ Бэкенд вернул success=false:', response);
                     throw new Error('Бэкенд вернул ошибку: ' + (response?.error || 'Неизвестная ошибка'));
                 }
                 
-                // Проверяем структуру данных
+                // Детальная проверка структуры данных
                 // Ожидаем: {success: true, data: [{goalIds: [], distributed: {}, transaction_id: "..."}]}
                 const responseData = response.data;
-                if (Array.isArray(responseData) && responseData.length > 0) {
-                    const transactionResult = responseData[0];
-                    console.log('✅ Структура данных корректна:', {
-                        goalIds: transactionResult.goalIds?.length || 0,
-                        distributed: Object.keys(transactionResult.distributed || {}).length,
-                        transaction_id: transactionResult.transaction_id
-                    });
-                } else if (responseData && typeof responseData === 'object') {
+                
+                if (!responseData) {
+                    console.warn('⚠️ Ответ не содержит data, но success=true');
+                } else if (Array.isArray(responseData)) {
+                    if (responseData.length > 0) {
+                        const transactionResult = responseData[0];
+                        console.log('✅ Массив с данными транзакции:', {
+                            goalIds: transactionResult.goalIds?.length || 0,
+                            distributedKeys: Object.keys(transactionResult.distributed || {}).length,
+                            transaction_id: transactionResult.transaction_id
+                        });
+                        
+                        // Проверяем, что transaction_id соответствует
+                        if (transactionResult.transaction_id !== transactionId) {
+                            console.warn('⚠️ Transaction ID не совпадает!', {
+                                expected: transactionId,
+                                received: transactionResult.transaction_id
+                            });
+                        }
+                    } else {
+                        console.warn('⚠️ Пустой массив в response.data');
+                    }
+                } else if (typeof responseData === 'object') {
                     // Альтернативная структура (если бэкенд изменил формат)
-                    console.log('✅ Альтернативная структура данных:', responseData);
+                    console.log('✅ Объект данных (альтернативная структура):', Object.keys(responseData));
                 } else {
-                    console.warn('⚠️ Неожиданная структура ответа, но success=true:', response);
+                    console.warn('⚠️ Неожиданный тип данных:', typeof responseData);
                 }
                 
+                console.log('✅ Транзакция успешно отменена на бэкенде');
                 haptic('success');
                 
                 // Закрываем модальное окно
                 closeConfirmUndoModal();
                 
-                // Добавляем задержку для синхронизации с бэкендом (500ms вместо 300ms)
-                console.log('⏳ Ожидание синхронизации с бэкендом...');
-                await new Promise(resolve => setTimeout(resolve, 500));
+                // Задержка для синхронизации с бэкендом (600ms для надежности)
+                console.log('⏳ Ожидание синхронизации с бэкендом (600ms)...');
+                await new Promise(resolve => setTimeout(resolve, 600));
                 
-                console.log('🔄 Обновляем UI...');
+                console.log('🔄 Обновляем UI параллельно...');
                 
-                // Обновляем обе страницы параллельно
-                await Promise.all([
-                    renderGoals(),
-                    renderHistory()
+                // Обновляем обе страницы параллельно с обработкой ошибок
+                const updateResults = await Promise.allSettled([
+                    renderGoals().catch(err => {
+                        console.error('❌ Ошибка обновления целей:', err);
+                        throw err;
+                    }),
+                    renderHistory().catch(err => {
+                        console.error('❌ Ошибка обновления истории:', err);
+                        throw err;
+                    })
                 ]);
                 
-                console.log('✅ UI обновлен успешно');
+                // Проверяем результаты обновления
+                const failedUpdates = updateResults.filter(r => r.status === 'rejected');
+                if (failedUpdates.length > 0) {
+                    console.error('❌ Некоторые обновления UI не удались:', failedUpdates);
+                } else {
+                    console.log('✅ UI полностью обновлен');
+                }
+                
+                // Показываем успех даже если были проблемы с UI (транзакция-то удалена)
                 celebrateWithConfetti();
                 showToast('🔙 Доход отменен');
 
             } catch (error) {
-                console.error('❌ Ошибка отмены транзакции:', {
+                console.error('❌ ОШИБКА при отмене транзакции:', {
                     message: error.message,
                     stack: error.stack,
-                    transactionId: transactionId
+                    transactionId: transactionId,
+                    amount: amount,
+                    timestamp: new Date().toISOString()
                 });
                 
                 haptic('error');
                 closeConfirmUndoModal();
                 
-                // Показываем понятное сообщение об ошибке
-                const errorMessage = error.message || 'Не удалось отменить транзакцию';
+                // Формируем понятное сообщение об ошибке
+                let errorMessage = 'Не удалось отменить транзакцию';
+                if (error.message) {
+                    if (error.message.includes('HTTP')) {
+                        errorMessage = 'Ошибка связи с сервером';
+                    } else if (error.message.includes('success=false')) {
+                        errorMessage = 'Сервер отклонил операцию';
+                    } else {
+                        errorMessage = error.message;
+                    }
+                }
+                
                 tg.showAlert('❌ Ошибка: ' + errorMessage);
                 
-                // Пробуем обновить UI даже при ошибке (на случай если бэкенд выполнил операцию)
+                // Пробуем обновить UI даже при ошибке (на случай если операция частично выполнилась)
+                console.log('🔄 Попытка обновить UI после ошибки...');
                 try {
-                    await Promise.all([
+                    await Promise.allSettled([
                         renderGoals(),
                         renderHistory()
                     ]);
+                    console.log('✅ UI обновлен после ошибки');
                 } catch (uiError) {
-                    console.error('❌ Не удалось обновить UI:', uiError);
+                    console.error('❌ Критическая ошибка обновления UI:', uiError);
                 }
             } finally {
-                // Убираем индикатор загрузки
+                // Убираем индикатор загрузки в любом случае
                 btn.classList.remove('loading');
                 btn.disabled = false;
+                console.log('🏁 Завершение операции отмены транзакции');
             }
         }
 
