@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/picker.css">
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -1059,6 +1060,108 @@
             font-weight: bold;
             color: #0ff;
         }
+
+        /* Onboarding Styles */
+        .onboarding-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .onboarding-overlay.active {
+            display: flex;
+        }
+
+        .onboarding-content {
+            max-width: 400px;
+            text-align: center;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .onboarding-emoji {
+            font-size: 80px;
+            margin-bottom: 24px;
+            animation: bounce 1s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .onboarding-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .onboarding-description {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .onboarding-hint {
+            background: var(--input-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 24px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-align: left;
+        }
+
+        .template-goals {
+            display: grid;
+            gap: 12px;
+            margin: 24px 0;
+            text-align: left;
+        }
+
+        .template-goal {
+            background: var(--card-bg);
+            border: 2px solid var(--separator);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .template-goal:active {
+            transform: scale(0.98);
+            border-color: var(--apple-blue);
+        }
+
+        .template-goal-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+
+        .template-goal-emoji {
+            font-size: 24px;
+        }
+
+        .template-goal-percent {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
     </style>
 </head>
 <body>
@@ -1219,6 +1322,26 @@
         </div>
     </div>
 
+    <!-- Onboarding Overlay -->
+    <div id="onboardingOverlay" class="onboarding-overlay">
+        <div class="onboarding-content">
+            <div class="onboarding-emoji">👋</div>
+            <div class="onboarding-title">Добро пожаловать!</div>
+            <div class="onboarding-description">
+                Давайте создадим ваши первые финансовые цели,<br>
+                чтобы начать умно распределять доходы.
+            </div>
+            
+            <button class="btn btn-primary" onclick="startOnboarding()">
+                <span>✨</span> Создать первую цель
+            </button>
+
+            <div class="onboarding-hint">
+                💡 <strong>Совет:</strong> Распределите 100% дохода между целями, чтобы ничего не терялось
+            </div>
+        </div>
+    </div>
+
     <script>
         // ====== CONFIGURATION ======
         const tg = window.Telegram.WebApp;
@@ -1356,7 +1479,9 @@
             settings: {},
             currentEditingGoal: null,
             pendingIncome: null,
-            dragMode: false
+            dragMode: false,
+            needsOnboarding: false,
+            onboardingCompleted: false
         };
 
         // ====== UTILITY FUNCTIONS ======
@@ -1373,6 +1498,28 @@
                 else if (type === 'error') tg.HapticFeedback.notificationOccurred('error');
                 else if (type === 'warning') tg.HapticFeedback.notificationOccurred('warning');
             }
+        }
+
+        // ====== CONFETTI FUNCTION ======
+        function celebrateWithConfetti() {
+            if (typeof confetti === 'undefined') {
+                console.warn('Confetti library not loaded');
+                return;
+            }
+            
+            // Конфигурация конфетти в стиле Apple
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#5856D6'],
+                shapes: ['circle', 'square'],
+                gravity: 1.2,
+                drift: 0,
+                ticks: 200
+            });
+            
+            haptic('success');
         }
 
         function showError(elementId, message) {
@@ -1474,6 +1621,12 @@
         async function loadGoals() {
             const data = await apiRequest(`/goals/${USER_ID}`);
             state.goals = data.data?.goals || [];
+            state.needsOnboarding = data.needsOnboarding || false;
+            
+            // Проверяем localStorage для предотвращения повторного показа
+            const onboardingCompleted = localStorage.getItem('onboarding_completed') === 'true';
+            state.onboardingCompleted = onboardingCompleted;
+            
             return data;
         }
 
@@ -1634,6 +1787,14 @@
 
             try {
                 const data = await loadGoals();
+                
+                // Проверяем необходимость онбординга
+                if (state.needsOnboarding && !state.onboardingCompleted) {
+                    showOnboardingOverlay();
+                    container.innerHTML = ''; // Очищаем контейнер
+                    return;
+                }
+                
                 const totalBalance = state.goals.reduce((sum, g) => sum + (g.current_amount || 0), 0);
 
                 if (state.goals.length === 0) {
@@ -1839,6 +2000,21 @@
             }
         }
 
+        // ====== ONBOARDING ======
+        function showOnboardingOverlay() {
+            document.getElementById('onboardingOverlay').classList.add('active');
+        }
+
+        function hideOnboardingOverlay() {
+            document.getElementById('onboardingOverlay').classList.remove('active');
+        }
+
+        function startOnboarding() {
+            haptic('medium');
+            hideOnboardingOverlay();
+            showGoalModal();
+        }
+
         // Простой toast для уведомлений (вместо alert)
         function showToast(message) {
             const existingToast = document.getElementById('toast');
@@ -2037,9 +2213,18 @@
                 }
 
                 haptic('success');
+                celebrateWithConfetti();
                 closeGoalModal();
                 await renderGoals();
-                tg.showAlert(state.currentEditingGoal ? '✅ Цель обновлена!' : '✅ Цель создана!');
+                
+                // Проверяем первую цель для онбординга
+                if (!state.currentEditingGoal && state.goals.length === 0) {
+                    localStorage.setItem('onboarding_completed', 'true');
+                    state.onboardingCompleted = true;
+                    showToast('🎉 Первая цель создана!');
+                } else {
+                    showToast(state.currentEditingGoal ? '✅ Цель обновлена!' : '✅ Цель создана!');
+                }
 
             } catch (error) {
                 showError('goalModalError', error.message);
@@ -2160,6 +2345,7 @@
                 await addIncome(amount, description);
                 
                 haptic('success');
+                celebrateWithConfetti();
                 closeAddIncomeModal();
                 await renderGoals();
                 
@@ -2266,6 +2452,7 @@
                 ]);
                 
                 console.log('✅ UI обновлен успешно');
+                celebrateWithConfetti();
                 showToast('🔙 Доход отменен');
 
             } catch (error) {
