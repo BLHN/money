@@ -686,16 +686,62 @@
             box-shadow: var(--card-shadow);
         }
 
+        .stat-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .stat-icon {
+            font-size: 24px;
+        }
+
         .stat-label {
             font-size: 12px;
             color: var(--tg-theme-hint-color);
-            margin-bottom: 8px;
         }
 
         .stat-value {
             font-size: 24px;
             font-weight: 700;
             color: var(--tg-theme-text-color);
+            margin-bottom: 4px;
+        }
+
+        .stat-trend {
+            font-size: 12px;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Процент изменения - яркий, заметный */
+        .stats-card-change {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        /* Прогноз - серый, ненавязчивый */
+        .stats-card-forecast {
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 4px;
+            opacity: 0.8;
+            color: #9BA4B5;
+        }
+
+        /* Подзаголовок - совсем мелкий */
+        .stats-card-subtitle {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            opacity: 0.7;
         }
 
         /* Settings */
@@ -921,6 +967,78 @@
         @keyframes loading {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
+        }
+
+        /* Pull-to-Refresh Indicator */
+        .pull-to-refresh-indicator {
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1001;
+        }
+
+        .pull-to-refresh-indicator.visible {
+            opacity: 1;
+        }
+
+        .pull-to-refresh-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(0, 122, 255, 0.2);
+            border-top-color: #007AFF;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* Skeleton cards для статистики */
+        .skeleton-metric-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            border: 0.5px solid var(--separator);
+            box-shadow: var(--card-shadow);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .skeleton-header {
+            width: 60%;
+            height: 16px;
+            background: var(--input-bg);
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        .skeleton-value {
+            width: 80%;
+            height: 28px;
+            background: var(--input-bg);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-subtitle {
+            width: 50%;
+            height: 12px;
+            background: var(--input-bg);
+            border-radius: 4px;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
         }
 
         /* Animations */
@@ -1431,6 +1549,14 @@
 
         .insight-card.goal_near {
             border-left-color: #9C27B0;
+        }
+
+        .insight-card.forecast_positive {
+            border-left-color: #4CAF50;
+        }
+
+        .insight-card.forecast_warning {
+            border-left-color: #FF9800;
         }
 
         .insight-header {
@@ -3241,6 +3367,10 @@
             async init() {
                 try {
                     console.log('📊 StatsModule.init() вызван');
+                    
+                    // Показываем скелетные экраны
+                    this.renderSkeletonScreens();
+                    
                     await this.loadStatsData();
                     console.log('📊 Данные загружены, statsData:', this.statsData ? 'есть' : 'НЕТ');
                     
@@ -3254,6 +3384,48 @@
                     console.error('❌ StatsModule.init() ошибка:', error);
                     this.showError('Ошибка загрузки данных: ' + error.message);
                 }
+            },
+
+            // Рендер скелетных экранов
+            renderSkeletonScreens() {
+                const metricsGrid = document.getElementById('statsMetricsGrid');
+                const insightsContainer = document.getElementById('statsInsights');
+                
+                // Скелетные карточки метрик (4 штуки)
+                metricsGrid.innerHTML = `
+                    <div class="skeleton-metric-card">
+                        <div class="skeleton-header"></div>
+                        <div class="skeleton-value"></div>
+                        <div class="skeleton-subtitle"></div>
+                    </div>
+                    <div class="skeleton-metric-card">
+                        <div class="skeleton-header"></div>
+                        <div class="skeleton-value"></div>
+                        <div class="skeleton-subtitle"></div>
+                    </div>
+                    <div class="skeleton-metric-card">
+                        <div class="skeleton-header"></div>
+                        <div class="skeleton-value"></div>
+                        <div class="skeleton-subtitle"></div>
+                    </div>
+                    <div class="skeleton-metric-card">
+                        <div class="skeleton-header"></div>
+                        <div class="skeleton-value"></div>
+                        <div class="skeleton-subtitle"></div>
+                    </div>
+                `;
+                
+                // Скелетные инсайты (2 штуки)
+                insightsContainer.innerHTML = `
+                    <div class="skeleton-metric-card" style="border-left: 3px solid var(--separator);">
+                        <div class="skeleton-header"></div>
+                        <div class="skeleton-value"></div>
+                    </div>
+                    <div class="skeleton-metric-card" style="border-left: 3px solid var(--separator);">
+                        <div class="skeleton-header"></div>
+                        <div class="skeleton-value"></div>
+                    </div>
+                `;
             },
 
             // Загрузка данных с API
@@ -3320,62 +3492,125 @@
                 console.log('✅ Главный экран отрендерен успешно');
             },
 
+            // Функции для определения стиля изменений
+            getChangeIcon(changeType) {
+                if (changeType === 'up') return '📈';
+                if (changeType === 'down') return '🔻';
+                if (changeType === 'stable') return '➡️';
+                return '🔮';
+            },
+
+            getChangeColor(changeType) {
+                if (changeType === 'up') return '#4CAF50';
+                if (changeType === 'down') return '#F44336';
+                if (changeType === 'stable') return '#9BA4B5';
+                return '#9BA4B5';
+            },
+
+            // Рендер карточки дохода
+            renderIncomeCard(summary) {
+                const hasChange = summary.totalIncomeChange !== null && summary.totalIncomeChange !== undefined;
+                const hasForecast = summary.totalIncomeDisplay !== null;
+
+                let changeOrForecastHtml = '';
+                let subtitleText = 'Всего получено';
+
+                if (hasChange) {
+                    const changeColor = this.getChangeColor(summary.totalIncomeChangeType);
+                    const changeIcon = this.getChangeIcon(summary.totalIncomeChangeType);
+                    const changePrefix = summary.totalIncomeChange > 0 ? '+' : '';
+                    changeOrForecastHtml = `
+                        <div class="stats-card-change" style="color: ${changeColor}">
+                            ${changePrefix}${summary.totalIncomeChange}% ${changeIcon}
+                        </div>
+                    `;
+                    subtitleText = 'Среднедневной доход';
+                } else if (hasForecast) {
+                    changeOrForecastHtml = `
+                        <div class="stats-card-forecast">
+                            ${summary.totalIncomeDisplay} 🔮
+                        </div>
+                    `;
+                    subtitleText = 'Всего получено';
+                }
+
+                return `
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-icon">📈</span>
+                            <span class="metric-title">Доход</span>
+                        </div>
+                        <div class="metric-value">${formatNumber(summary.totalIncome)} ₽</div>
+                        ${changeOrForecastHtml}
+                        <div class="stats-card-subtitle">${subtitleText}</div>
+                    </div>
+                `;
+            },
+
+            // Рендер карточки накоплений
+            renderSavedCard(summary) {
+                const hasChange = summary.totalSavedChange !== null && summary.totalSavedChange !== undefined;
+                const hasForecast = summary.totalSavedDisplay !== null;
+
+                let changeOrForecastHtml = '';
+                let subtitleText = 'За всё время';
+
+                if (hasChange) {
+                    const changeColor = this.getChangeColor(summary.totalSavedChangeType);
+                    const changeIcon = this.getChangeIcon(summary.totalSavedChangeType);
+                    const changePrefix = summary.totalSavedChange > 0 ? '+' : '';
+                    changeOrForecastHtml = `
+                        <div class="stats-card-change" style="color: ${changeColor}">
+                            ${changePrefix}${summary.totalSavedChange}% ${changeIcon}
+                        </div>
+                    `;
+                    subtitleText = 'Среднедневное накопление';
+                } else if (hasForecast) {
+                    changeOrForecastHtml = `
+                        <div class="stats-card-forecast">
+                            ${summary.totalSavedDisplay} 🔮
+                        </div>
+                    `;
+                    subtitleText = 'Всего накоплено';
+                }
+
+                return `
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-icon">💰</span>
+                            <span class="metric-title">Накоплено</span>
+                        </div>
+                        <div class="metric-value">${formatNumber(summary.totalSaved)} ₽</div>
+                        ${changeOrForecastHtml}
+                        <div class="stats-card-subtitle">${subtitleText}</div>
+                    </div>
+                `;
+            },
+
             // Рендер карточек метрик
             renderMetricCards(summary) {
                 const container = document.getElementById('statsMetricsGrid');
                 
-                const metrics = [
-                    {
-                        icon: '💰',
-                        title: 'Накоплено',
-                        value: formatNumber(summary.totalSaved) + ' ₽',
-                        change: summary.totalSavedChange,
-                        subtitle: 'За последний месяц'
-                    },
-                    {
-                        icon: '📈',
-                        title: 'Доход',
-                        value: formatNumber(summary.totalIncome) + ' ₽',
-                        change: summary.totalIncomeChange,
-                        subtitle: 'Всего получено'
-                    },
-                    {
-                        icon: '📝',
-                        title: 'Транзакций',
-                        value: summary.transactionCount,
-                        subtitle: `+${summary.transactionCountMonth} за месяц`,
-                        change: null
-                    },
-                    {
-                        icon: '💵',
-                        title: 'Средний доход',
-                        value: formatNumber(summary.averageIncome) + ' ₽',
-                        trend: summary.averageIncomeTrend,
-                        subtitle: this.getTrendText(summary.averageIncomeTrend)
-                    }
-                ];
-
-                container.innerHTML = metrics.map(m => `
+                container.innerHTML = `
+                    ${this.renderIncomeCard(summary)}
+                    ${this.renderSavedCard(summary)}
                     <div class="metric-card">
                         <div class="metric-header">
-                            <span class="metric-icon">${m.icon}</span>
-                            <span class="metric-title">${m.title}</span>
+                            <span class="metric-icon">📊</span>
+                            <span class="metric-title">Транзакций</span>
                         </div>
-                        <div class="metric-value">${m.value}</div>
-                        ${m.change !== null && m.change !== undefined ? `
-                            <div class="metric-change ${this.getChangeClass(m.change)}">
-                                ${this.getChangeIcon(m.change)} ${Math.abs(m.change).toFixed(1)}%
-                            </div>
-                        ` : ''}
-                        ${m.trend ? `
-                            <div class="metric-change ${this.getTrendClass(m.trend)}">
-                                ${this.getTrendIcon(m.trend)} ${m.subtitle}
-                            </div>
-                        ` : m.subtitle ? `
-                            <div class="metric-subtitle">${m.subtitle}</div>
-                        ` : ''}
+                        <div class="metric-value">${summary.transactionCount}</div>
+                        <div class="stats-card-subtitle">Всего операций</div>
                     </div>
-                `).join('');
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-icon">📅</span>
+                            <span class="metric-title">За месяц</span>
+                        </div>
+                        <div class="metric-value">${summary.transactionCountMonth}</div>
+                        <div class="stats-card-subtitle">Операций в месяце</div>
+                    </div>
+                `;
             },
 
             // Рендер инсайтов
@@ -4221,8 +4456,21 @@
         function setupPullToRefresh(screenElement, refreshCallback) {
             if (!screenElement) return;
 
+            // Создаем индикатор для этого экрана
+            let indicator = screenElement.querySelector('.pull-to-refresh-indicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.className = 'pull-to-refresh-indicator';
+                indicator.innerHTML = '<div class="pull-to-refresh-spinner"></div>';
+                screenElement.style.position = 'relative';
+                screenElement.insertBefore(indicator, screenElement.firstChild);
+            }
+
             screenElement.addEventListener('touchstart', (e) => {
-                if (screenElement.scrollTop === 0 && !pullToRefreshState.isRefreshing) {
+                // КРИТИЧЕСКИ ВАЖНО: проверяем точный scrollTop === 0
+                const isAtTop = screenElement.scrollTop === 0;
+                
+                if (isAtTop && !pullToRefreshState.isRefreshing) {
                     pullToRefreshState.startY = e.touches[0].clientY;
                     pullToRefreshState.isDragging = true;
                 }
@@ -4230,18 +4478,36 @@
 
             screenElement.addEventListener('touchmove', (e) => {
                 if (!pullToRefreshState.isDragging || pullToRefreshState.isRefreshing) return;
+                
+                // Еще раз проверяем что мы на верху
+                const isAtTop = screenElement.scrollTop === 0;
+                if (!isAtTop) {
+                    pullToRefreshState.isDragging = false;
+                    indicator.classList.remove('visible');
+                    return;
+                }
 
                 pullToRefreshState.currentY = e.touches[0].clientY;
                 const pullDistance = pullToRefreshState.currentY - pullToRefreshState.startY;
 
                 if (pullDistance > 0 && pullDistance < 150) {
                     e.preventDefault();
+                    
+                    // Показываем индикатор при протяжке вниз
+                    if (pullDistance > 30) {
+                        indicator.classList.add('visible');
+                        const rotation = Math.min(pullDistance * 2, 360);
+                        indicator.querySelector('.pull-to-refresh-spinner').style.transform = `rotate(${rotation}deg)`;
+                    } else {
+                        indicator.classList.remove('visible');
+                    }
                 }
             });
 
             screenElement.addEventListener('touchend', async () => {
                 if (!pullToRefreshState.isDragging || pullToRefreshState.isRefreshing) {
                     pullToRefreshState.isDragging = false;
+                    indicator.classList.remove('visible');
                     return;
                 }
 
@@ -4250,6 +4516,10 @@
                 if (pullDistance > 100) {
                     pullToRefreshState.isRefreshing = true;
                     haptic('medium');
+                    
+                    // Показываем анимацию загрузки
+                    indicator.classList.add('visible');
+                    indicator.querySelector('.pull-to-refresh-spinner').style.animation = 'spin 0.8s linear infinite';
                     
                     try {
                         await refreshCallback();
@@ -4260,7 +4530,14 @@
                         showToast('❌ Ошибка обновления');
                     } finally {
                         pullToRefreshState.isRefreshing = false;
+                        indicator.classList.remove('visible');
+                        indicator.querySelector('.pull-to-refresh-spinner').style.animation = '';
+                        indicator.querySelector('.pull-to-refresh-spinner').style.transform = '';
                     }
+                } else {
+                    // Убираем индикатор если не дотянули
+                    indicator.classList.remove('visible');
+                    indicator.querySelector('.pull-to-refresh-spinner').style.transform = '';
                 }
                 
                 pullToRefreshState.isDragging = false;
