@@ -1172,22 +1172,20 @@
             position: relative !important;
         }
         
-        /* Кнопки в модалке подтверждения отмены */
+        /* Кнопки в модалке подтверждения отмены - ИСПРАВЛЕНО */
         #confirmUndoModal .btn-group {
             display: flex;
             gap: 8px;
         }
         
         #confirmUndoModal .btn-secondary {
-            flex: 0 0 auto;
-            min-width: fit-content;
+            width: auto;
+            padding: 0 20px;
             white-space: nowrap;
-            padding: 0 16px;
         }
         
         #confirmUndoBtn {
             flex: 1;
-            min-width: 140px;
             white-space: nowrap;
             padding: 0 16px;
         }
@@ -1747,22 +1745,18 @@
                         <div class="nav-arrow-stats">→</div>
                     </div>
                     <div class="stats-nav-card" data-action="navigate-stats" data-screen="goals">
-                        <div class="nav-icon-stats">🎯</div>
                         <div class="nav-title-stats">По целям</div>
                         <div class="nav-arrow-stats">→</div>
                     </div>
                     <div class="stats-nav-card" data-action="navigate-stats" data-screen="transactions">
-                        <div class="nav-icon-stats">📊</div>
                         <div class="nav-title-stats">Транзакции</div>
                         <div class="nav-arrow-stats">→</div>
                     </div>
                     <div class="stats-nav-card" data-action="navigate-stats" data-screen="forecasts">
-                        <div class="nav-icon-stats">🔮</div>
                         <div class="nav-title-stats">Прогнозы</div>
                         <div class="nav-arrow-stats">→</div>
                     </div>
                     <div class="stats-nav-card" data-action="navigate-stats" data-screen="achievements">
-                        <div class="nav-icon-stats">🏆</div>
                         <div class="nav-title-stats">Достижения</div>
                         <div class="nav-arrow-stats">→</div>
                     </div>
@@ -1857,7 +1851,7 @@
 
     <!-- Floating Add Income Button -->
     <div class="add-income-floating" data-action="show-income-modal">
-        <span>➕</span>
+        ➕
     </div>
 
     <!-- Bottom Navigation -->
@@ -1875,7 +1869,6 @@
             <div class="nav-label">Статистика</div>
         </div>
         <div class="nav-item" data-action="switch-page" data-page="settings">
-            <div class="nav-icon">⚙️</div>
             <div class="nav-label">Настройки</div>
         </div>
     </div>
@@ -1982,6 +1975,42 @@
                     <button class="btn btn-secondary" data-action="close-undo-modal">Отмена</button>
                     <button class="btn btn-primary" id="confirmUndoBtn" style="background: var(--apple-red); box-shadow: 0 4px 12px rgba(255, 59, 48, 0.25);" data-action="confirm-undo">
                         <span class="btn-text">Отменить доход</span>
+                        <span class="btn-spinner"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Goal Modal -->
+    <div id="confirmDeleteGoalModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Удалить цель</div>
+                <button class="modal-close" data-action="close-delete-goal-modal">×</button>
+            </div>
+            
+            <div class="confirm-dialog">
+                <div class="confirm-detail" id="confirmDeleteGoalDetails" style="font-size: 18px; font-weight: 600; padding: 16px; background: var(--input-bg); border-radius: 12px;"></div>
+                
+                <div style="margin: 16px 0; padding: 14px; background: rgba(255, 152, 0, 0.1); border: 1px solid rgba(255, 152, 0, 0.3); border-radius: 12px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span style="font-size: 20px;">⚠️</span>
+                        <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Важно!</span>
+                    </div>
+                    <div style="font-size: 14px; color: var(--text-primary); line-height: 1.5;">
+                        При удалении цели деньги <strong>не будут автоматически перераспределены</strong> между другими целями.
+                    </div>
+                </div>
+                
+                <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; padding: 12px; background: rgba(120, 120, 128, 0.08); border-radius: 10px;">
+                    💡 Если вы хотите перераспределить средства, добавьте их вручную к другим целям через настройки целей.
+                </div>
+                
+                <div class="btn-group" style="margin-top: 20px; display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" style="width: auto; padding: 0 20px;" data-action="close-delete-goal-modal">Отмена</button>
+                    <button class="btn btn-primary" id="confirmDeleteGoalBtn" style="flex: 1; background: var(--apple-red); box-shadow: 0 4px 12px rgba(255, 59, 48, 0.25);" data-action="confirm-delete-goal">
+                        <span class="btn-text">Удалить цель</span>
                         <span class="btn-spinner"></span>
                     </button>
                 </div>
@@ -3021,24 +3050,76 @@
             showGoalModal(goalId);
         }
 
-        async function deleteGoal() {
-            if (!state.currentEditingGoal) return;
+        // ====== CONFIRM DELETE GOAL MODAL ======
+        let pendingDeleteGoal = null;
 
-            const confirmed = confirm(`Вы уверены, что хотите удалить цель "${state.currentEditingGoal.goal_name}"?`);
-            if (!confirmed) return;
+        function showConfirmDeleteGoalModal(goal) {
+            pendingDeleteGoal = goal;
+            
+            const modal = document.getElementById('confirmDeleteGoalModal');
+            const details = document.getElementById('confirmDeleteGoalDetails');
 
+            details.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                    <span style="font-size: 32px;">${goal.emoji}</span>
+                    <div>
+                        <div style="font-size: 18px; font-weight: 700;">${goal.goal_name}</div>
+                        <div style="font-size: 14px; color: var(--text-secondary); font-weight: 500;">
+                            Баланс: ${formatNumber(goal.current_amount)} ₽
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.add('active');
+            haptic('medium');
+        }
+
+        function closeConfirmDeleteGoalModal() {
+            haptic('light');
+            const modal = document.getElementById('confirmDeleteGoalModal');
+            modal.classList.add('closing');
+            setTimeout(() => {
+                modal.classList.remove('active', 'closing');
+                pendingDeleteGoal = null;
+            }, 300);
+        }
+
+        async function confirmDeleteGoal() {
+            if (!pendingDeleteGoal) {
+                console.warn('⚠️ Нет pending цели для удаления');
+                return;
+            }
+            
+            const goal = pendingDeleteGoal;
             haptic('heavy');
 
+            // Показываем индикатор загрузки
+            const btn = document.getElementById('confirmDeleteGoalBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
             try {
-                await deleteGoalById(state.currentEditingGoal.id);
+                await deleteGoalById(goal.id);
                 haptic('success');
+                closeConfirmDeleteGoalModal();
                 closeGoalModal();
                 await renderGoals();
-                tg.showAlert('🗑 Цель удалена');
+                showToast('🗑 Цель удалена');
 
             } catch (error) {
-                showError('goalModalError', error.message);
+                haptic('error');
+                closeConfirmDeleteGoalModal();
+                tg.showAlert('❌ Ошибка удаления: ' + error.message);
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
             }
+        }
+
+        async function deleteGoal() {
+            if (!state.currentEditingGoal) return;
+            showConfirmDeleteGoalModal(state.currentEditingGoal);
         }
 
         // ====== INCOME MODAL ======
@@ -4236,6 +4317,18 @@
                 }
 
                 const goals = this.statsData.goals;
+                
+                // ИСПРАВЛЕНИЕ: Проверка на пустой массив distribution
+                if (!goals.distribution || goals.distribution.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-emoji">📊</div>
+                            <div>Нет данных для отображения распределения по целям</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
                 const chartId = 'pieChartGoals';
 
                 container.innerHTML = `
@@ -4937,6 +5030,14 @@
                     break;
                 case 'undo-income':
                     undoIncome(target.dataset.transactionId, parseFloat(target.dataset.amount), target.dataset.date);
+                    break;
+                    
+                // Удаление целей
+                case 'close-delete-goal-modal':
+                    closeConfirmDeleteGoalModal();
+                    break;
+                case 'confirm-delete-goal':
+                    confirmDeleteGoal();
                     break;
                     
                 // Выбор эмодзи и описаний
