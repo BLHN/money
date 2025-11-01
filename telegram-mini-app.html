@@ -550,7 +550,7 @@
 
         /* Buttons */
         .btn {
-            padding: 0;
+            padding: 0 16px;
             border: none;
             border-radius: 14px;
             font-size: 17px;
@@ -574,7 +574,7 @@
         }
 
         .btn.loading .btn-text {
-            opacity: 0;
+            visibility: hidden;
         }
 
         .btn-spinner {
@@ -1164,12 +1164,12 @@
             font-size: 14px;
         }
         
-        /* Фиксированный размер кнопки добавления дохода */
-        #submitIncomeBtn {
-            width: 100% !important;
-            min-height: 52px !important;
-            height: 52px !important;
-            position: relative !important;
+        /* Unified loading button styles - prevents resizing during loading state */
+        .btn .btn-text {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
         
         /* Кнопки в модалке подтверждения отмены - ИСПРАВЛЕНО */
@@ -1188,11 +1188,6 @@
             flex: 1;
             white-space: nowrap;
             padding: 0 16px;
-        }
-        
-        /* Убираем конфликтующие правила для текста и спиннера */
-        .btn .btn-text {
-            position: relative;
         }
         
         /* Фиксируем размеры для всех кнопок в истории */
@@ -1917,11 +1912,13 @@
             </div>
 
             <button class="btn btn-primary" data-action="save-goal">
-                <span>✅</span> Сохранить
+                <span class="btn-text"><span>✅</span> Сохранить</span>
+                <span class="btn-spinner"></span>
             </button>
 
             <button class="btn btn-danger" id="deleteGoalBtn" style="display: none;" data-action="delete-goal">
-                <span>🗑</span> Удалить цель
+                <span class="btn-text"><span>🗑</span> Удалить цель</span>
+                <span class="btn-spinner"></span>
             </button>
         </div>
     </div>
@@ -3045,6 +3042,10 @@
 
             } catch (error) {
                 showError('goalModalError', error.message);
+            } finally {
+                // Убираем индикатор загрузки
+                saveBtn.classList.remove('loading');
+                saveBtn.disabled = false;
             }
         }
 
