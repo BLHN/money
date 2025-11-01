@@ -2487,13 +2487,15 @@
 
             document.getElementById(pageMap[pageName]).classList.add('active');
 
-            // Load data for the page
-            if (pageName === 'history' && state.history.length === 0) {
+            // Load data for the page with skeleton loading
+            if (pageName === 'history') {
                 renderHistory();
             } else if (pageName === 'stats') {
                 renderStats();
-            } else if (pageName === 'settings' && !state.settings.loaded) {
+            } else if (pageName === 'settings') {
                 renderSettings();
+            } else if (pageName === 'goals') {
+                renderGoals();
             }
         }
 
@@ -4802,7 +4804,7 @@
 
                 container.innerHTML = `
                     <div class="header">
-                        <h1>⚙️ Настройки</h1>
+                        <h1>Настройки</h1>
                     </div>
 
                     <div class="settings-section">
