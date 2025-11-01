@@ -1045,43 +1045,6 @@
             animation: shimmer 1.8s ease-in-out infinite;
         }
 
-        /* Pull-to-Refresh Indicator - ИСПРАВЛЕННЫЙ */
-        .pull-to-refresh-indicator {
-            position: fixed; /* Фиксированная позиция чтобы быть поверх всего */
-            top: 80px; /* Отступ от верха экрана */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.3s ease, top 0.3s ease;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 9999; /* Поверх всего */
-            background: rgba(var(--card-bg-rgb), 0.95);
-            border-radius: 50%;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .pull-to-refresh-indicator.visible {
-            opacity: 1;
-            top: 100px; /* Спускаем вниз при показе */
-        }
-
-        .pull-to-refresh-spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid rgba(0, 122, 255, 0.2);
-            border-top-color: #007AFF;
-            border-radius: 50%;
-            /* Анимация добавляется динамически */
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
 
         /* Skeleton cards для статистики */
         .skeleton-metric-card {
@@ -2175,6 +2138,20 @@
         // API Configuration v2.0 - Backend Compatible
         const API_BASE = 'https://n8n.blhn-ai.ru/webhook/api-backend-v2';
 
+        // DOM Cache для оптимизации
+        const DOMCache = {
+            _cache: {},
+            get(id) {
+                if (!this._cache[id]) {
+                    this._cache[id] = document.getElementById(id);
+                }
+                return this._cache[id];
+            },
+            clear() {
+                this._cache = {};
+            }
+        };
+
         // State
         let state = {
             goals: [],
@@ -2493,7 +2470,7 @@
 
         // ====== GOALS RENDERING ======
         async function renderGoals() {
-            const container = document.getElementById('goalsPage');
+            const container = DOMCache.get('goalsPage');
             
             // Показываем скелетную загрузку вместо спиннера
             container.innerHTML = `
@@ -2640,13 +2617,6 @@
 
                 // Initialize drag and drop
                 initSortable();
-                
-                // Настройка pull-to-refresh для экрана целей
-                setTimeout(() => {
-                    setupPullToRefresh(container, async () => {
-                        await renderGoals();
-                    });
-                }, 300);
 
             } catch (error) {
                 container.innerHTML = `<div class="error">Ошибка загрузки целей: ${error.message}</div>`;
@@ -2667,7 +2637,7 @@
         }
 
         function initSortable() {
-            const grid = document.getElementById('goalsGrid');
+            const grid = DOMCache.get('goalsGrid');
             if (!grid || !window.Sortable) return;
 
             const goalCards = grid.querySelectorAll('.goal-card');
@@ -2791,11 +2761,11 @@
 
         // ====== ONBOARDING ======
         function showOnboardingOverlay() {
-            document.getElementById('onboardingOverlay').classList.add('active');
+            DOMCache.get('onboardingOverlay').classList.add('active');
         }
 
         function hideOnboardingOverlay() {
-            document.getElementById('onboardingOverlay').classList.remove('active');
+            DOMCache.get('onboardingOverlay').classList.remove('active');
         }
 
         function startOnboarding() {
@@ -2906,30 +2876,30 @@
             
             state.currentEditingGoal = goalId ? state.goals.find(g => g.id === goalId) : null;
 
-            const modal = document.getElementById('goalModal');
-            const title = document.getElementById('goalModalTitle');
-            const deleteBtn = document.getElementById('deleteGoalBtn');
-            const currentAmountGroup = document.getElementById('currentAmountGroup');
+            const modal = DOMCache.get('goalModal');
+            const title = DOMCache.get('goalModalTitle');
+            const deleteBtn = DOMCache.get('deleteGoalBtn');
+            const currentAmountGroup = DOMCache.get('currentAmountGroup');
 
             if (state.currentEditingGoal) {
                 title.textContent = '✏️ Редактировать цель';
                 deleteBtn.style.display = 'block';
                 currentAmountGroup.style.display = 'block';
                 
-                document.getElementById('goalName').value = state.currentEditingGoal.goal_name;
-                document.getElementById('customEmoji').value = state.currentEditingGoal.emoji;
-                document.getElementById('goalPercent').value = state.currentEditingGoal.target_percent;
-                document.getElementById('goalTarget').value = state.currentEditingGoal.target_amount || '';
-                document.getElementById('goalCurrent').value = state.currentEditingGoal.current_amount || 0;
+                DOMCache.get('goalName').value = state.currentEditingGoal.goal_name;
+                DOMCache.get('customEmoji').value = state.currentEditingGoal.emoji;
+                DOMCache.get('goalPercent').value = state.currentEditingGoal.target_percent;
+                DOMCache.get('goalTarget').value = state.currentEditingGoal.target_amount || '';
+                DOMCache.get('goalCurrent').value = state.currentEditingGoal.current_amount || 0;
             } else {
                 title.textContent = '➕ Новая цель';
                 deleteBtn.style.display = 'none';
                 currentAmountGroup.style.display = 'none';
                 
-                document.getElementById('goalName').value = '';
-                document.getElementById('customEmoji').value = '';
-                document.getElementById('goalPercent').value = '';
-                document.getElementById('goalTarget').value = '';
+                DOMCache.get('goalName').value = '';
+                DOMCache.get('customEmoji').value = '';
+                DOMCache.get('goalPercent').value = '';
+                DOMCache.get('goalTarget').value = '';
             }
 
             renderEmojiPicker();
@@ -2968,7 +2938,7 @@
 
         function closeGoalModal() {
             haptic('light');
-            const modal = document.getElementById('goalModal');
+            const modal = DOMCache.get('goalModal');
             modal.classList.add('closing');
             setTimeout(() => {
                 modal.classList.remove('active', 'closing');
@@ -3075,20 +3045,20 @@
         function showAddIncomeModal() {
             haptic('medium');
             
-            document.getElementById('addIncomeModal').classList.add('active');
-            document.getElementById('incomeAmount').value = '';
-            document.getElementById('incomeDescriptionCustom').value = '';
-            document.getElementById('distributionPreview').style.display = 'none';
+            DOMCache.get('addIncomeModal').classList.add('active');
+            DOMCache.get('incomeAmount').value = '';
+            DOMCache.get('incomeDescriptionCustom').value = '';
+            DOMCache.get('distributionPreview').style.display = 'none';
             clearMessage('incomeModalError');
             
             renderDescriptionPicker();
             
-            setTimeout(() => document.getElementById('incomeAmount').focus(), 300);
+            setTimeout(() => DOMCache.get('incomeAmount').focus(), 300);
         }
 
         function closeAddIncomeModal() {
             haptic('light');
-            const modal = document.getElementById('addIncomeModal');
+            const modal = DOMCache.get('addIncomeModal');
             modal.classList.add('closing');
             setTimeout(() => {
                 modal.classList.remove('active', 'closing');
@@ -3372,7 +3342,7 @@
 
         // ====== HISTORY ======
         async function renderHistory() {
-            const container = document.getElementById('historyContent');
+            const container = DOMCache.get('historyContent');
             
             // Показываем скелетную загрузку вместо спиннера
             container.innerHTML = `
@@ -3381,7 +3351,7 @@
                     <div class="skeleton-subtitle" style="width: 100px; margin: 0 auto;"></div>
                 </div>
                 <div class="transactions-list">
-                    ${[1, 2, 3].map(() => `
+                    ${[1, 2].map(() => `
                         <div class="skeleton-card" style="margin-bottom: 12px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                 <div class="skeleton-value" style="width: 120px; height: 24px;"></div>
@@ -3496,13 +3466,6 @@
                 }).join('');
 
                 container.innerHTML = historyHtml;
-                
-                // Настройка pull-to-refresh для экрана истории
-                setTimeout(() => {
-                    setupPullToRefresh(container, async () => {
-                        await renderHistory();
-                    });
-                }, 300);
 
             } catch (error) {
                 container.innerHTML = `<div class="error">Ошибка загрузки истории: ${error.message}</div>`;
@@ -3568,7 +3531,7 @@
                 `).join('');
                 
                 // Скелетные инсайты (6 штук для полного покрытия)
-                insightsContainer.innerHTML = Array.from({length: 3}, () => `
+                insightsContainer.innerHTML = Array.from({length: 2}, () => `
                     <div class="skeleton-metric-card" style="border-left: 3px solid var(--separator);">
                         <div class="skeleton-header"></div>
                         <div class="skeleton-value"></div>
@@ -3887,7 +3850,7 @@
                                 <div class="skeleton-metric-card" style="height: 250px;"></div>
                             </div>
                             <div class="stats-metrics-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px;">
-                                ${Array.from({length: 3}, () => `
+                                ${Array.from({length: 2}, () => `
                                     <div class="skeleton-metric-card">
                                         <div class="skeleton-header"></div>
                                         <div class="skeleton-value"></div>
@@ -3933,7 +3896,7 @@
                                 <div class="skeleton-value" style="width: 40%; margin: 12px auto;"></div>
                             </div>
                             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-                                ${Array.from({length: 3}, () => `
+                                ${Array.from({length: 2}, () => `
                                     <div class="skeleton-metric-card" style="padding: 20px;">
                                         <div class="skeleton-circle" style="width: 48px; height: 48px; margin: 0 auto 12px;"></div>
                                         <div class="skeleton-header" style="width: 80%; margin: 0 auto 8px;"></div>
@@ -4685,141 +4648,11 @@
         // ====== STATISTICS ======
         async function renderStats() {
             await StatsModule.init();
-            
-            // Настройка pull-to-refresh для главного экрана статистики
-            setTimeout(() => {
-                const statsMainScreen = document.getElementById('statsMainScreen');
-                setupPullToRefresh(statsMainScreen, async () => {
-                    await StatsModule.loadStatsData();
-                    StatsModule.renderMainScreen();
-                });
-            }, 300);
-        }
-
-        // ====== PULL-TO-REFRESH ======
-        let pullToRefreshState = {
-            startY: 0,
-            currentY: 0,
-            isDragging: false,
-            isRefreshing: false
-        };
-
-        function setupPullToRefresh(screenElement, refreshCallback) {
-            if (!screenElement) {
-                console.warn('⚠️ setupPullToRefresh: нет screenElement');
-                return;
-            }
-
-            console.log('🔄 Настройка pull-to-refresh для:', screenElement.id || 'unknown');
-
-            // Убираем старый индикатор если есть
-            const oldIndicator = screenElement.querySelector('.pull-to-refresh-indicator');
-            if (oldIndicator) {
-                oldIndicator.remove();
-            }
-
-            // Создаем НОВЫЙ индикатор для этого экрана
-            const indicator = document.createElement('div');
-            indicator.className = 'pull-to-refresh-indicator';
-            indicator.innerHTML = '<div class="pull-to-refresh-spinner"></div>';
-            
-            // ВАЖНО: вставляем в начало контейнера
-            if (screenElement.style.position !== 'relative' && screenElement.style.position !== 'absolute') {
-                screenElement.style.position = 'relative';
-            }
-            screenElement.insertBefore(indicator, screenElement.firstChild);
-            
-            console.log('✅ Pull-to-refresh индикатор создан для:', screenElement.id);
-
-            screenElement.addEventListener('touchstart', (e) => {
-                // КРИТИЧЕСКИ ВАЖНО: проверяем точный scrollTop === 0
-                const isAtTop = screenElement.scrollTop === 0;
-                
-                console.log('👆 touchstart:', { isAtTop, scrollTop: screenElement.scrollTop, isRefreshing: pullToRefreshState.isRefreshing });
-                
-                if (isAtTop && !pullToRefreshState.isRefreshing) {
-                    pullToRefreshState.startY = e.touches[0].clientY;
-                    pullToRefreshState.isDragging = true;
-                    console.log('✅ Начало драга, startY:', pullToRefreshState.startY);
-                }
-            });
-
-            screenElement.addEventListener('touchmove', (e) => {
-                if (!pullToRefreshState.isDragging || pullToRefreshState.isRefreshing) return;
-                
-                // Еще раз проверяем что мы на верху
-                const isAtTop = screenElement.scrollTop === 0;
-                if (!isAtTop) {
-                    pullToRefreshState.isDragging = false;
-                    indicator.classList.remove('visible');
-                    return;
-                }
-
-                pullToRefreshState.currentY = e.touches[0].clientY;
-                const pullDistance = pullToRefreshState.currentY - pullToRefreshState.startY;
-
-                if (pullDistance > 0) {
-                    // Показываем индикатор при протяжке вниз
-                    if (pullDistance > 30) {
-                        e.preventDefault(); // Предотвращаем скролл только когда тянем достаточно
-                        indicator.classList.add('visible');
-                        const rotation = Math.min(pullDistance * 2, 360);
-                        const spinner = indicator.querySelector('.pull-to-refresh-spinner');
-                        if (spinner) {
-                            spinner.style.transform = `rotate(${rotation}deg)`;
-                        }
-                        console.log('🔄 Pull distance:', pullDistance, 'rotation:', rotation);
-                    } else {
-                        indicator.classList.remove('visible');
-                    }
-                }
-            });
-
-            screenElement.addEventListener('touchend', async () => {
-                if (!pullToRefreshState.isDragging || pullToRefreshState.isRefreshing) {
-                    pullToRefreshState.isDragging = false;
-                    indicator.classList.remove('visible');
-                    return;
-                }
-
-                const pullDistance = pullToRefreshState.currentY - pullToRefreshState.startY;
-                
-                if (pullDistance > 100) {
-                    pullToRefreshState.isRefreshing = true;
-                    haptic('medium');
-                    
-                    // Показываем анимацию загрузки
-                    indicator.classList.add('visible');
-                    indicator.querySelector('.pull-to-refresh-spinner').style.animation = 'spin 0.8s linear infinite';
-                    
-                    try {
-                        await refreshCallback();
-                        haptic('success');
-                        showToast('✅ Обновлено');
-                    } catch (error) {
-                        haptic('error');
-                        showToast('❌ Ошибка обновления');
-                    } finally {
-                        pullToRefreshState.isRefreshing = false;
-                        indicator.classList.remove('visible');
-                        indicator.querySelector('.pull-to-refresh-spinner').style.animation = '';
-                        indicator.querySelector('.pull-to-refresh-spinner').style.transform = '';
-                    }
-                } else {
-                    // Убираем индикатор если не дотянули
-                    indicator.classList.remove('visible');
-                    indicator.querySelector('.pull-to-refresh-spinner').style.transform = '';
-                }
-                
-                pullToRefreshState.isDragging = false;
-                pullToRefreshState.startY = 0;
-                pullToRefreshState.currentY = 0;
-            });
         }
 
         // ====== SETTINGS ======
         async function renderSettings() {
-            const container = document.getElementById('settingsContent');
+            const container = DOMCache.get('settingsContent');
             
             // Показываем скелетную загрузку вместо спиннера
             container.innerHTML = `
@@ -4833,8 +4666,7 @@
                     
                     ${[
                         { titleWidth: '65%', subtitleWidth: '0%' },
-                        { titleWidth: '50%', subtitleWidth: '0%' },
-                        { titleWidth: '60%', subtitleWidth: '0%' }
+                        { titleWidth: '50%', subtitleWidth: '0%' }
                     ].map(item => `
                         <div class="skeleton-card" style="margin-bottom: 8px; padding: 16px;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -4852,8 +4684,7 @@
                     <div class="skeleton-subtitle" style="width: 110px; margin-bottom: 12px; opacity: 0.6;"></div>
                     
                     ${[
-                        { titleWidth: '40%', valueWidth: '30%' },
-                        { titleWidth: '35%', valueWidth: '60%' }
+                        { titleWidth: '40%', valueWidth: '30%' }
                     ].map(item => `
                         <div class="skeleton-card" style="margin-bottom: 8px; padding: 16px;">
                             <div class="skeleton-header" style="width: ${item.titleWidth}; margin-bottom: 8px;"></div>
@@ -4931,13 +4762,6 @@
                 `;
 
                 state.settings.loaded = true;
-                
-                // Настройка pull-to-refresh для экрана настроек
-                setTimeout(() => {
-                    setupPullToRefresh(container, async () => {
-                        await renderSettings();
-                    });
-                }, 300);
 
             } catch (error) {
                 container.innerHTML = `<div class="error">Ошибка загрузки настроек: ${error.message}</div>`;
