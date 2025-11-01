@@ -3252,7 +3252,11 @@
                 const container = document.getElementById('statsContent');
                 container.innerHTML = '<div class="loading"><div class="spinner"></div><div>Загрузка статистики...</div></div>';
 
-                const data = await apiRequest(`/stats/${USER_ID}`);
+                const response = await apiRequest(`/stats/${USER_ID}`);
+                
+                // API возвращает массив [{success: true, data: {...}}]
+                // Извлекаем первый элемент массива
+                const data = Array.isArray(response.data) ? response.data[0] : response.data;
                 this.statsData = data.data;
                 
                 console.log('📊 Статистика загружена:', this.statsData);
