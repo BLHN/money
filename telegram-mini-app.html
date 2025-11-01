@@ -957,7 +957,7 @@
             font-size: 14px;
         }
 
-        /* Skeleton Loader */
+        /* Skeleton Loader - улучшенная анимация */
         .skeleton {
             background: linear-gradient(90deg, var(--tg-theme-secondary-bg-color) 25%, rgba(0,0,0,0.05) 50%, var(--tg-theme-secondary-bg-color) 75%);
             background-size: 200% 100%;
@@ -967,6 +967,87 @@
         @keyframes loading {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
+        }
+        
+        /* Shimmer анимация для более реалистичного эффекта загрузки */
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        /* Skeleton cards для всех экранов */
+        .skeleton-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            border: 0.5px solid var(--separator);
+            box-shadow: var(--card-shadow);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .skeleton-header {
+            width: 60%;
+            height: 16px;
+            background: linear-gradient(90deg, var(--input-bg) 25%, rgba(120, 120, 128, 0.18) 50%, var(--input-bg) 75%);
+            background-size: 200% 100%;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            animation: shimmer 1.8s ease-in-out infinite;
+        }
+
+        .skeleton-value {
+            width: 80%;
+            height: 28px;
+            background: linear-gradient(90deg, var(--input-bg) 25%, rgba(120, 120, 128, 0.18) 50%, var(--input-bg) 75%);
+            background-size: 200% 100%;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            animation: shimmer 1.8s ease-in-out infinite;
+        }
+
+        .skeleton-subtitle {
+            width: 50%;
+            height: 12px;
+            background: linear-gradient(90deg, var(--input-bg) 25%, rgba(120, 120, 128, 0.18) 50%, var(--input-bg) 75%);
+            background-size: 200% 100%;
+            border-radius: 4px;
+            animation: shimmer 1.8s ease-in-out infinite;
+        }
+
+        .skeleton-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, var(--input-bg) 25%, rgba(120, 120, 128, 0.18) 50%, var(--input-bg) 75%);
+            background-size: 200% 100%;
+            border-radius: 3px;
+            margin-top: 12px;
+            animation: shimmer 1.8s ease-in-out infinite;
+        }
+
+        .skeleton-line {
+            height: 14px;
+            background: linear-gradient(90deg, var(--input-bg) 25%, rgba(120, 120, 128, 0.18) 50%, var(--input-bg) 75%);
+            background-size: 200% 100%;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            animation: shimmer 1.8s ease-in-out infinite;
+        }
+
+        .skeleton-line:last-child {
+            width: 70%;
+        }
+
+        .skeleton-circle {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(90deg, var(--input-bg) 25%, rgba(120, 120, 128, 0.18) 50%, var(--input-bg) 75%);
+            background-size: 200% 100%;
+            border-radius: 50%;
+            animation: shimmer 1.8s ease-in-out infinite;
         }
 
         /* Pull-to-Refresh Indicator - ИСПРАВЛЕННЫЙ */
@@ -1017,35 +1098,12 @@
             animation: pulse 1.5s ease-in-out infinite;
         }
 
-        .skeleton-header {
-            width: 60%;
-            height: 16px;
-            background: var(--input-bg);
-            border-radius: 4px;
-            margin-bottom: 12px;
-        }
-
-        .skeleton-value {
-            width: 80%;
-            height: 28px;
-            background: var(--input-bg);
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-
-        .skeleton-subtitle {
-            width: 50%;
-            height: 12px;
-            background: var(--input-bg);
-            border-radius: 4px;
-        }
-
         @keyframes pulse {
             0%, 100% {
                 opacity: 1;
             }
             50% {
-                opacity: 0.5;
+                opacity: 0.6;
             }
         }
 
@@ -2441,7 +2499,50 @@
         // ====== GOALS RENDERING ======
         async function renderGoals() {
             const container = document.getElementById('goalsPage');
-            container.innerHTML = '<div class="loading"><div class="spinner"></div><div>Загрузка целей...</div></div>';
+            
+            // Показываем скелетную загрузку вместо спиннера
+            container.innerHTML = `
+                <div class="header" style="text-align: center; margin-bottom: 24px;">
+                    <div class="skeleton-header" style="width: 120px; margin: 0 auto 12px;"></div>
+                    <div class="skeleton-subtitle" style="width: 100px; margin: 0 auto 8px;"></div>
+                    <div class="skeleton-value" style="width: 150px; height: 36px; margin: 8px auto;"></div>
+                </div>
+                <div class="goals-grid">
+                    <div class="skeleton-card">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="skeleton-circle" style="width: 32px; height: 32px;"></div>
+                                <div class="skeleton-header" style="width: 120px;"></div>
+                            </div>
+                            <div class="skeleton-value" style="width: 80px; height: 24px;"></div>
+                        </div>
+                        <div class="skeleton-subtitle" style="width: 60%;"></div>
+                        <div class="skeleton-progress-bar"></div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="skeleton-circle" style="width: 32px; height: 32px;"></div>
+                                <div class="skeleton-header" style="width: 140px;"></div>
+                            </div>
+                            <div class="skeleton-value" style="width: 90px; height: 24px;"></div>
+                        </div>
+                        <div class="skeleton-subtitle" style="width: 50%;"></div>
+                        <div class="skeleton-progress-bar"></div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="skeleton-circle" style="width: 32px; height: 32px;"></div>
+                                <div class="skeleton-header" style="width: 100px;"></div>
+                            </div>
+                            <div class="skeleton-value" style="width: 70px; height: 24px;"></div>
+                        </div>
+                        <div class="skeleton-subtitle" style="width: 55%;"></div>
+                        <div class="skeleton-progress-bar"></div>
+                    </div>
+                </div>
+            `;
 
             try {
                 const data = await loadGoals();
@@ -3261,7 +3362,34 @@
         // ====== HISTORY ======
         async function renderHistory() {
             const container = document.getElementById('historyContent');
-            container.innerHTML = '<div class="loading"><div class="spinner"></div><div>Загрузка истории...</div></div>';
+            
+            // Показываем скелетную загрузку вместо спиннера
+            container.innerHTML = `
+                <div class="header" style="text-align: center; margin-bottom: 24px;">
+                    <div class="skeleton-header" style="width: 140px; margin: 0 auto 12px;"></div>
+                    <div class="skeleton-subtitle" style="width: 100px; margin: 0 auto;"></div>
+                </div>
+                <div class="transactions-list">
+                    ${[1, 2, 3, 4, 5].map(() => `
+                        <div class="skeleton-card" style="margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div class="skeleton-value" style="width: 120px; height: 24px;"></div>
+                                <div class="skeleton-subtitle" style="width: 80px;"></div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                                <div class="skeleton-circle" style="width: 20px; height: 20px;"></div>
+                                <div class="skeleton-subtitle" style="width: 100px;"></div>
+                            </div>
+                            <div style="background: rgba(120, 120, 128, 0.08); border-radius: 8px; padding: 12px;">
+                                <div class="skeleton-subtitle" style="width: 120px; margin-bottom: 12px;"></div>
+                                <div class="skeleton-line" style="width: 100%; margin-bottom: 8px;"></div>
+                                <div class="skeleton-line" style="width: 90%; margin-bottom: 8px;"></div>
+                                <div class="skeleton-line" style="width: 80%;"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
 
             try {
                 await loadHistory();
@@ -4586,7 +4714,56 @@
         // ====== SETTINGS ======
         async function renderSettings() {
             const container = document.getElementById('settingsContent');
-            container.innerHTML = '<div class="loading"><div class="spinner"></div><div>Загрузка настроек...</div></div>';
+            
+            // Показываем скелетную загрузку вместо спиннера
+            container.innerHTML = `
+                <div class="header" style="text-align: center; margin-bottom: 24px;">
+                    <div class="skeleton-header" style="width: 140px; margin: 0 auto;"></div>
+                </div>
+                
+                <!-- Скелет секции "Общие" -->
+                <div style="margin-bottom: 24px;">
+                    <div class="skeleton-subtitle" style="width: 80px; margin-bottom: 12px; opacity: 0.6;"></div>
+                    
+                    ${[
+                        { titleWidth: '65%', subtitleWidth: '0%' },
+                        { titleWidth: '50%', subtitleWidth: '0%' },
+                        { titleWidth: '60%', subtitleWidth: '0%' }
+                    ].map(item => `
+                        <div class="skeleton-card" style="margin-bottom: 8px; padding: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="flex: 1;">
+                                    <div class="skeleton-header" style="width: ${item.titleWidth};"></div>
+                                </div>
+                                <div class="skeleton-circle" style="width: 50px; height: 28px; border-radius: 14px;"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <!-- Скелет секции "Информация" -->
+                <div style="margin-bottom: 24px;">
+                    <div class="skeleton-subtitle" style="width: 110px; margin-bottom: 12px; opacity: 0.6;"></div>
+                    
+                    ${[
+                        { titleWidth: '40%', valueWidth: '30%' },
+                        { titleWidth: '35%', valueWidth: '60%' }
+                    ].map(item => `
+                        <div class="skeleton-card" style="margin-bottom: 8px; padding: 16px;">
+                            <div class="skeleton-header" style="width: ${item.titleWidth}; margin-bottom: 8px;"></div>
+                            <div class="skeleton-subtitle" style="width: ${item.valueWidth};"></div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <!-- Скелет секции "Отладка" -->
+                <div>
+                    <div class="skeleton-subtitle" style="width: 90px; margin-bottom: 12px; opacity: 0.6;"></div>
+                    <div class="skeleton-card" style="padding: 16px;">
+                        <div class="skeleton-header" style="width: 55%;"></div>
+                    </div>
+                </div>
+            `;
 
             try {
                 await loadSettings();
