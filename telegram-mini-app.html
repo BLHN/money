@@ -969,10 +969,10 @@
             100% { background-position: -200% 0; }
         }
 
-        /* Pull-to-Refresh Indicator */
+        /* Pull-to-Refresh Indicator - ИСПРАВЛЕННЫЙ */
         .pull-to-refresh-indicator {
-            position: absolute;
-            top: -60px;
+            position: fixed; /* Фиксированная позиция чтобы быть поверх всего */
+            top: 80px; /* Отступ от верха экрана */
             left: 50%;
             transform: translateX(-50%);
             width: 40px;
@@ -980,14 +980,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: opacity 0.3s ease, top 0.3s ease;
             opacity: 0;
             pointer-events: none;
-            z-index: 1001;
+            z-index: 9999; /* Поверх всего */
+            background: rgba(var(--card-bg-rgb), 0.95);
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .pull-to-refresh-indicator.visible {
             opacity: 1;
+            top: 100px; /* Спускаем вниз при показе */
         }
 
         .pull-to-refresh-spinner {
@@ -996,7 +1000,11 @@
             border: 3px solid rgba(0, 122, 255, 0.2);
             border-top-color: #007AFF;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            /* Анимация добавляется динамически */
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         /* Skeleton cards для статистики */
@@ -3368,8 +3376,11 @@
                 try {
                     console.log('📊 StatsModule.init() вызван');
                     
-                    // Показываем скелетные экраны
+                    // Показываем скелетные экраны СРАЗУ
                     this.renderSkeletonScreens();
+                    
+                    // Добавляем небольшую задержку чтобы пользователь увидел скелеты
+                    await new Promise(resolve => setTimeout(resolve, 300));
                     
                     await this.loadStatsData();
                     console.log('📊 Данные загружены, statsData:', this.statsData ? 'есть' : 'НЕТ');
@@ -3388,8 +3399,14 @@
 
             // Рендер скелетных экранов
             renderSkeletonScreens() {
+                console.log('💀 renderSkeletonScreens() вызван');
                 const metricsGrid = document.getElementById('statsMetricsGrid');
                 const insightsContainer = document.getElementById('statsInsights');
+                
+                if (!metricsGrid || !insightsContainer) {
+                    console.warn('⚠️ Не найдены элементы для скелетных экранов');
+                    return;
+                }
                 
                 // Скелетные карточки метрик (4 штуки)
                 metricsGrid.innerHTML = `
@@ -4454,25 +4471,42 @@
         };
 
         function setupPullToRefresh(screenElement, refreshCallback) {
-            if (!screenElement) return;
-
-            // Создаем индикатор для этого экрана
-            let indicator = screenElement.querySelector('.pull-to-refresh-indicator');
-            if (!indicator) {
-                indicator = document.createElement('div');
-                indicator.className = 'pull-to-refresh-indicator';
-                indicator.innerHTML = '<div class="pull-to-refresh-spinner"></div>';
-                screenElement.style.position = 'relative';
-                screenElement.insertBefore(indicator, screenElement.firstChild);
+            if (!screenElement) {
+                console.warn('⚠️ setupPullToRefresh: нет screenElement');
+                return;
             }
+
+            console.log('🔄 Настройка pull-to-refresh для:', screenElement.id || 'unknown');
+
+            // Убираем старый индикатор если есть
+            const oldIndicator = screenElement.querySelector('.pull-to-refresh-indicator');
+            if (oldIndicator) {
+                oldIndicator.remove();
+            }
+
+            // Создаем НОВЫЙ индикатор для этого экрана
+            const indicator = document.createElement('div');
+            indicator.className = 'pull-to-refresh-indicator';
+            indicator.innerHTML = '<div class="pull-to-refresh-spinner"></div>';
+            
+            // ВАЖНО: вставляем в начало контейнера
+            if (screenElement.style.position !== 'relative' && screenElement.style.position !== 'absolute') {
+                screenElement.style.position = 'relative';
+            }
+            screenElement.insertBefore(indicator, screenElement.firstChild);
+            
+            console.log('✅ Pull-to-refresh индикатор создан для:', screenElement.id);
 
             screenElement.addEventListener('touchstart', (e) => {
                 // КРИТИЧЕСКИ ВАЖНО: проверяем точный scrollTop === 0
                 const isAtTop = screenElement.scrollTop === 0;
                 
+                console.log('👆 touchstart:', { isAtTop, scrollTop: screenElement.scrollTop, isRefreshing: pullToRefreshState.isRefreshing });
+                
                 if (isAtTop && !pullToRefreshState.isRefreshing) {
                     pullToRefreshState.startY = e.touches[0].clientY;
                     pullToRefreshState.isDragging = true;
+                    console.log('✅ Начало драга, startY:', pullToRefreshState.startY);
                 }
             });
 
@@ -4490,14 +4524,17 @@
                 pullToRefreshState.currentY = e.touches[0].clientY;
                 const pullDistance = pullToRefreshState.currentY - pullToRefreshState.startY;
 
-                if (pullDistance > 0 && pullDistance < 150) {
-                    e.preventDefault();
-                    
+                if (pullDistance > 0) {
                     // Показываем индикатор при протяжке вниз
                     if (pullDistance > 30) {
+                        e.preventDefault(); // Предотвращаем скролл только когда тянем достаточно
                         indicator.classList.add('visible');
                         const rotation = Math.min(pullDistance * 2, 360);
-                        indicator.querySelector('.pull-to-refresh-spinner').style.transform = `rotate(${rotation}deg)`;
+                        const spinner = indicator.querySelector('.pull-to-refresh-spinner');
+                        if (spinner) {
+                            spinner.style.transform = `rotate(${rotation}deg)`;
+                        }
+                        console.log('🔄 Pull distance:', pullDistance, 'rotation:', rotation);
                     } else {
                         indicator.classList.remove('visible');
                     }
