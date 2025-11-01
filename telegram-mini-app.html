@@ -3240,36 +3240,75 @@
             // Инициализация модуля
             async init() {
                 try {
+                    console.log('📊 StatsModule.init() вызван');
                     await this.loadStatsData();
+                    console.log('📊 Данные загружены, statsData:', this.statsData ? 'есть' : 'НЕТ');
+                    
+                    if (!this.statsData) {
+                        throw new Error('Данные статистики не загружены');
+                    }
+                    
                     this.renderMainScreen();
+                    console.log('📊 Главный экран отрендерен');
                 } catch (error) {
+                    console.error('❌ StatsModule.init() ошибка:', error);
                     this.showError('Ошибка загрузки данных: ' + error.message);
                 }
             },
 
             // Загрузка данных с API
             async loadStatsData() {
+                console.log('📡 Загрузка статистики для USER_ID:', USER_ID);
                 const response = await apiRequest(`/stats/${USER_ID}`);
+                
+                console.log('📥 Сырой ответ от API:', {
+                    success: response.success,
+                    hasData: !!response.data,
+                    dataType: Array.isArray(response.data) ? 'array' : typeof response.data
+                });
                 
                 // API возвращает массив [{success: true, data: {...}}]
                 // Извлекаем первый элемент массива
                 const data = Array.isArray(response.data) ? response.data[0] : response.data;
+                
+                console.log('📦 Распакованные данные:', {
+                    hasData: !!data,
+                    hasNestedData: !!(data && data.data),
+                    keys: data ? Object.keys(data) : []
+                });
+                
                 this.statsData = data.data;
                 
-                console.log('📊 Статистика загружена:', this.statsData);
+                console.log('✅ statsData сохранен:', {
+                    saved: !!this.statsData,
+                    hasSummary: !!(this.statsData && this.statsData.summary),
+                    hasInsights: !!(this.statsData && this.statsData.insights)
+                });
             },
 
             // Рендер главного экрана
             renderMainScreen() {
-                if (!this.statsData) return;
+                console.log('🎨 renderMainScreen() вызван, statsData:', this.statsData ? 'есть' : 'НЕТ');
+                
+                if (!this.statsData) {
+                    console.error('❌ renderMainScreen(): statsData пустой!');
+                    this.showError('Нет данных для отображения');
+                    return;
+                }
 
                 const data = this.statsData;
+                console.log('📊 Рендерим данные:', {
+                    hasSummary: !!data.summary,
+                    hasInsights: !!data.insights
+                });
                 
                 // Рендерим 4 карточки метрик
                 this.renderMetricCards(data.summary);
                 
                 // Рендерим инсайты
                 this.renderInsights(data.insights);
+                
+                console.log('✅ Главный экран отрендерен успешно');
             },
 
             // Рендер карточек метрик
