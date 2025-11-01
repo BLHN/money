@@ -582,11 +582,9 @@
 
         .btn-spinner {
             position: absolute;
-            left: 0;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            margin: auto;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
             width: 20px;
             height: 20px;
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -1022,62 +1020,37 @@
             font-size: 14px;
         }
         
-        /* Фиксированный размер кнопок с загрузкой */
+        /* Фиксированный размер кнопки добавления дохода */
         #submitIncomeBtn {
             width: 100% !important;
-            min-width: 100% !important;
-            max-width: 100% !important;
             min-height: 52px !important;
-            max-height: 52px !important;
             height: 52px !important;
-            padding: 0 16px !important;
-            box-sizing: border-box !important;
-            flex-shrink: 0 !important;
-            overflow: hidden !important;
+            position: relative !important;
+        }
+        
+        /* Кнопки в модалке подтверждения отмены */
+        #confirmUndoModal .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+        
+        #confirmUndoModal .btn-secondary {
+            flex: 0 0 auto;
+            min-width: fit-content;
+            white-space: nowrap;
+            padding: 0 16px;
         }
         
         #confirmUndoBtn {
-            flex: 1 !important;
-            min-width: 0 !important;
-            max-width: none !important;
-            min-height: 52px !important;
-            max-height: 52px !important;
-            height: 52px !important;
-            padding: 0 16px !important;
-            box-sizing: border-box !important;
-            flex-shrink: 0 !important;
-            overflow: hidden !important;
-            width: auto !important;
+            flex: 1;
+            min-width: 140px;
+            white-space: nowrap;
+            padding: 0 16px;
         }
         
-        /* Фиксируем размеры даже в состоянии загрузки */
-        #confirmUndoBtn.loading,
-        #submitIncomeBtn.loading {
-            min-height: 52px !important;
-            max-height: 52px !important;
-            height: 52px !important;
-            padding: 0 16px !important;
-            flex-shrink: 0 !important;
-            overflow: hidden !important;
-        }
-        
-        /* Дополнительная фиксация для кнопки отмены в группе */
-        .btn-group #confirmUndoBtn.loading {
-            flex: 1 !important;
-            min-width: 0 !important;
-            max-width: none !important;
-            width: auto !important;
-        }
-        
-        /* Фиксация внутренних элементов кнопки */
-        #submitIncomeBtn .btn-text,
-        #submitIncomeBtn .btn-spinner,
-        #confirmUndoBtn .btn-text,
-        #confirmUndoBtn .btn-spinner {
-            position: absolute !important;
-            left: 50% !important;
-            top: 50% !important;
-            transform: translate(-50%, -50%) !important;
+        /* Убираем конфликтующие правила для текста и спиннера */
+        .btn .btn-text {
+            position: relative;
         }
         
         /* Фиксируем размеры для всех кнопок в истории */
