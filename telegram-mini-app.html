@@ -3267,22 +3267,31 @@
                     dataType: Array.isArray(response.data) ? 'array' : typeof response.data
                 });
                 
-                // API возвращает массив [{success: true, data: {...}}]
-                // Извлекаем первый элемент массива
-                const data = Array.isArray(response.data) ? response.data[0] : response.data;
+                // API возвращает массив [{success: true, userId: ..., data: {...}}]
+                // Извлекаем первый элемент массива и его вложенное поле data
+                let rawData;
+                if (Array.isArray(response.data)) {
+                    rawData = response.data[0]; // {success, userId, data}
+                    this.statsData = rawData.data; // Берем вложенный data
+                } else if (response.data && response.data.data) {
+                    this.statsData = response.data.data;
+                } else {
+                    this.statsData = response.data;
+                }
                 
                 console.log('📦 Распакованные данные:', {
-                    hasData: !!data,
-                    hasNestedData: !!(data && data.data),
-                    keys: data ? Object.keys(data) : []
+                    hasStatsData: !!this.statsData,
+                    hasSummary: !!(this.statsData && this.statsData.summary),
+                    hasInsights: !!(this.statsData && this.statsData.insights),
+                    summaryKeys: this.statsData && this.statsData.summary ? Object.keys(this.statsData.summary) : []
                 });
                 
-                this.statsData = data.data;
-                
-                console.log('✅ statsData сохранен:', {
+                console.log('✅ statsData финальная структура:', {
                     saved: !!this.statsData,
                     hasSummary: !!(this.statsData && this.statsData.summary),
-                    hasInsights: !!(this.statsData && this.statsData.insights)
+                    hasPeriods: !!(this.statsData && this.statsData.periods),
+                    hasGoals: !!(this.statsData && this.statsData.goals),
+                    hasTransactions: !!(this.statsData && this.statsData.transactions)
                 });
             },
 
