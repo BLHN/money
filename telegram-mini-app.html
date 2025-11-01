@@ -339,11 +339,6 @@
             animation: shimmer 2s infinite;
         }
 
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
         .goal-progress-text {
             font-size: 12px;
             color: var(--tg-theme-hint-color);
@@ -1783,27 +1778,27 @@
 
                 <!-- Меню навигации -->
                 <div class="stats-navigation-menu">
-                    <div class="stats-nav-card" onclick="StatsModule.navigateTo('periods')">
+                    <div class="stats-nav-card" data-action="navigate-stats" data-screen="periods">
                         <div class="nav-icon-stats">📅</div>
                         <div class="nav-title-stats">По периодам</div>
                         <div class="nav-arrow-stats">→</div>
                     </div>
-                    <div class="stats-nav-card" onclick="StatsModule.navigateTo('goals')">
+                    <div class="stats-nav-card" data-action="navigate-stats" data-screen="goals">
                         <div class="nav-icon-stats">🎯</div>
                         <div class="nav-title-stats">По целям</div>
                         <div class="nav-arrow-stats">→</div>
                     </div>
-                    <div class="stats-nav-card" onclick="StatsModule.navigateTo('transactions')">
+                    <div class="stats-nav-card" data-action="navigate-stats" data-screen="transactions">
                         <div class="nav-icon-stats">📊</div>
                         <div class="nav-title-stats">Транзакции</div>
                         <div class="nav-arrow-stats">→</div>
                     </div>
-                    <div class="stats-nav-card" onclick="StatsModule.navigateTo('forecasts')">
+                    <div class="stats-nav-card" data-action="navigate-stats" data-screen="forecasts">
                         <div class="nav-icon-stats">🔮</div>
                         <div class="nav-title-stats">Прогнозы</div>
                         <div class="nav-arrow-stats">→</div>
                     </div>
-                    <div class="stats-nav-card" onclick="StatsModule.navigateTo('achievements')">
+                    <div class="stats-nav-card" data-action="navigate-stats" data-screen="achievements">
                         <div class="nav-icon-stats">🏆</div>
                         <div class="nav-title-stats">Достижения</div>
                         <div class="nav-arrow-stats">→</div>
@@ -1824,16 +1819,16 @@
             <!-- Экран "По периодам" -->
             <div id="statsPeriodsScreen" class="stats-screen">
                 <div class="stats-screen-header">
-                    <button class="back-button" onclick="StatsModule.navigateBack()">← Назад</button>
+                    <button class="back-button" data-action="stats-back">← Назад</button>
                     <h2 style="flex: 1; margin: 0; font-size: 20px;">📅 По периодам</h2>
                 </div>
 
                 <!-- Табы периодов -->
                 <div class="period-tabs" id="periodTabs">
-                    <div class="period-tab active" data-period="month" onclick="StatsModule.switchPeriod('month')">Месяц</div>
-                    <div class="period-tab" data-period="3months" onclick="StatsModule.switchPeriod('3months')">3 месяца</div>
-                    <div class="period-tab" data-period="6months" onclick="StatsModule.switchPeriod('6months')">6 месяцев</div>
-                    <div class="period-tab" data-period="year" onclick="StatsModule.switchPeriod('year')">Год</div>
+                    <div class="period-tab active" data-period="month" data-action="switch-period">Месяц</div>
+                    <div class="period-tab" data-period="3months" data-action="switch-period">3 месяца</div>
+                    <div class="period-tab" data-period="6months" data-action="switch-period">6 месяцев</div>
+                    <div class="period-tab" data-period="year" data-action="switch-period">Год</div>
                 </div>
 
                 <!-- Контент периодов -->
@@ -1845,7 +1840,7 @@
             <!-- Экран "По целям" -->
             <div id="statsGoalsScreen" class="stats-screen">
                 <div class="stats-screen-header">
-                    <button class="back-button" onclick="StatsModule.navigateBack()">← Назад</button>
+                    <button class="back-button" data-action="stats-back">← Назад</button>
                     <h2 style="flex: 1; margin: 0; font-size: 20px;">🎯 По целям</h2>
                 </div>
 
@@ -1857,7 +1852,7 @@
             <!-- Экран "Транзакции" -->
             <div id="statsTransactionsScreen" class="stats-screen">
                 <div class="stats-screen-header">
-                    <button class="back-button" onclick="StatsModule.navigateBack()">← Назад</button>
+                    <button class="back-button" data-action="stats-back">← Назад</button>
                     <h2 style="flex: 1; margin: 0; font-size: 20px;">📊 Транзакции</h2>
                 </div>
 
@@ -1869,7 +1864,7 @@
             <!-- Экран "Прогнозы" -->
             <div id="statsForecastsScreen" class="stats-screen">
                 <div class="stats-screen-header">
-                    <button class="back-button" onclick="StatsModule.navigateBack()">← Назад</button>
+                    <button class="back-button" data-action="stats-back">← Назад</button>
                     <h2 style="flex: 1; margin: 0; font-size: 20px;">🔮 Прогнозы</h2>
                 </div>
 
@@ -1881,7 +1876,7 @@
             <!-- Экран "Достижения" -->
             <div id="statsAchievementsScreen" class="stats-screen">
                 <div class="stats-screen-header">
-                    <button class="back-button" onclick="StatsModule.navigateBack()">← Назад</button>
+                    <button class="back-button" data-action="stats-back">← Назад</button>
                     <h2 style="flex: 1; margin: 0; font-size: 20px;">🏆 Достижения</h2>
                 </div>
 
@@ -1898,25 +1893,25 @@
     </div>
 
     <!-- Floating Add Income Button -->
-    <div class="add-income-floating" onclick="showAddIncomeModal()">
+    <div class="add-income-floating" data-action="show-income-modal">
         <span>➕</span>
     </div>
 
     <!-- Bottom Navigation -->
     <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchPage('goals')">
+        <div class="nav-item active" data-action="switch-page" data-page="goals">
             <div class="nav-icon">💰</div>
             <div class="nav-label">Цели</div>
         </div>
-        <div class="nav-item" onclick="switchPage('history')">
+        <div class="nav-item" data-action="switch-page" data-page="history">
             <div class="nav-icon">📊</div>
             <div class="nav-label">История</div>
         </div>
-        <div class="nav-item" onclick="switchPage('stats')">
+        <div class="nav-item" data-action="switch-page" data-page="stats">
             <div class="nav-icon">📈</div>
             <div class="nav-label">Статистика</div>
         </div>
-        <div class="nav-item" onclick="switchPage('settings')">
+        <div class="nav-item" data-action="switch-page" data-page="settings">
             <div class="nav-icon">⚙️</div>
             <div class="nav-label">Настройки</div>
         </div>
@@ -1933,7 +1928,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title" id="goalModalTitle">➕ Новая цель</div>
-                <button class="modal-close" onclick="closeGoalModal()">×</button>
+                <button class="modal-close" data-action="close-goal-modal">×</button>
             </div>
             <div id="goalModalError"></div>
             
@@ -1964,11 +1959,11 @@
                 <input type="number" id="goalCurrent" class="input" placeholder="0" min="0" step="1">
             </div>
 
-            <button class="btn btn-primary" onclick="saveGoal()">
+            <button class="btn btn-primary" data-action="save-goal">
                 <span>✅</span> Сохранить
             </button>
 
-            <button class="btn btn-danger" id="deleteGoalBtn" style="display: none;" onclick="deleteGoal()">
+            <button class="btn btn-danger" id="deleteGoalBtn" style="display: none;" data-action="delete-goal">
                 <span>🗑</span> Удалить цель
             </button>
         </div>
@@ -1979,7 +1974,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title">💰 Добавить доход</div>
-                <button class="modal-close" onclick="closeAddIncomeModal()">×</button>
+                <button class="modal-close" data-action="close-income-modal">×</button>
             </div>
             <div id="incomeModalError"></div>
             
@@ -2000,7 +1995,7 @@
             </div>
 
             <div class="modal-sticky-footer">
-                <button class="btn btn-primary" id="submitIncomeBtn" onclick="submitIncome()">
+                <button class="btn btn-primary" id="submitIncomeBtn" data-action="submit-income">
                     <span class="btn-text">Добавить доход</span>
                     <span class="btn-spinner"></span>
                 </button>
@@ -2013,7 +2008,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title" id="confirmUndoTitle">Отменить доход</div>
-                <button class="modal-close" onclick="closeConfirmUndoModal()">×</button>
+                <button class="modal-close" data-action="close-undo-modal">×</button>
             </div>
             
             <div class="confirm-dialog">
@@ -2021,8 +2016,8 @@
                 <div class="confirm-message" style="margin-top: 16px; font-size: 15px; color: var(--text-secondary);">Вы уверены? Это вернет средства из всех целей.</div>
                 
                 <div class="btn-group" style="margin-top: 20px;">
-                    <button class="btn btn-secondary" onclick="closeConfirmUndoModal()">Отмена</button>
-                    <button class="btn btn-primary" id="confirmUndoBtn" style="background: var(--apple-red); box-shadow: 0 4px 12px rgba(255, 59, 48, 0.25);" onclick="confirmUndoIncome()">
+                    <button class="btn btn-secondary" data-action="close-undo-modal">Отмена</button>
+                    <button class="btn btn-primary" id="confirmUndoBtn" style="background: var(--apple-red); box-shadow: 0 4px 12px rgba(255, 59, 48, 0.25);" data-action="confirm-undo">
                         <span class="btn-text">Отменить доход</span>
                         <span class="btn-spinner"></span>
                     </button>
@@ -2041,7 +2036,7 @@
                 чтобы начать умно распределять доходы.
             </div>
             
-            <button class="btn btn-primary" onclick="startOnboarding()">
+            <button class="btn btn-primary" data-action="start-onboarding">
                 <span>✨</span> Создать первую цель
             </button>
 
@@ -2569,7 +2564,7 @@
                         <div class="empty-state">
                             <div class="empty-emoji">🎯</div>
                             <div>У вас пока нет целей</div>
-                            <button class="btn btn-primary" style="margin-top: 24px; max-width: 300px; margin-left: auto; margin-right: auto;" onclick="showGoalModal()">
+                            <button class="btn btn-primary" style="margin-top: 24px; max-width: 300px; margin-left: auto; margin-right: auto;" data-action="show-goal-modal">
                                 ➕ Создать первую цель
                             </button>
                         </div>
@@ -2589,7 +2584,7 @@
                         <div class="empty-state">
                             <div class="empty-emoji">⚠️</div>
                             <div>Ошибка: цели имеют некорректный формат</div>
-                            <button class="btn btn-primary" style="margin-top: 24px; max-width: 300px; margin-left: auto; margin-right: auto;" onclick="location.reload()">
+                            <button class="btn btn-primary" style="margin-top: 24px; max-width: 300px; margin-left: auto; margin-right: auto;" data-action="reload-page">
                                 🔄 Перезагрузить
                             </button>
                         </div>
@@ -2601,7 +2596,7 @@
                     const progress = goal.target_amount ? Math.min((goal.current_amount / goal.target_amount) * 100, 100) : 0;
                     
                     return `
-                        <div class="goal-card" data-goal-id="${goal.id}" style="animation-delay: ${index * 0.1}s;" onclick="handleGoalClick(${goal.id})">
+                        <div class="goal-card" data-goal-id="${goal.id}" style="animation-delay: ${index * 0.1}s;" data-action="handle-goal-click">
                             <div class="drag-indicator">⠿</div>
                             <div class="goal-header">
                                 <div class="goal-label">
@@ -2634,7 +2629,7 @@
                     </div>
                     <div class="goals-grid" id="goalsGrid">
                         ${goalsHtml}
-                        <button class="add-goal-btn" onclick="showGoalModal()">
+                        <button class="add-goal-btn" data-action="show-goal-modal">
                             <span>➕</span> Добавить цель
                         </button>
                     </div>
@@ -2891,7 +2886,7 @@
             
             // Эмодзи + подпись
             container.innerHTML = defaultDescriptions.map(desc => `
-                <div class="emoji-option description-option" data-value="${desc.label}" onclick="selectDescription(event, '${desc.label}')">
+                <div class="emoji-option description-option" data-value="${desc.label}" data-action="select-description" data-label="${desc.label}">
                     <span>${desc.emoji}</span>
                     <span>${desc.label}</span>
                 </div>
@@ -2949,7 +2944,7 @@
             const currentEmoji = state.currentEditingGoal?.emoji || '';
 
             container.innerHTML = defaultEmojis.map(emoji => `
-                <div class="emoji-option ${emoji === currentEmoji ? 'selected' : ''}" onclick="selectEmoji('${emoji}')">
+                <div class="emoji-option ${emoji === currentEmoji ? 'selected' : ''}" data-action="select-emoji" data-emoji="${emoji}">
                     ${emoji}
                 </div>
             `).join('');
@@ -3108,7 +3103,21 @@
             
             if (!amountInput) return;
 
-            amountInput.addEventListener('input', (e) => {
+            // Debounce-обертка для input событий
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+            
+            // Оптимизированный обработчик с debounce
+            const updateDistributionPreview = debounce((e) => {
                 const amount = parseFloat(e.target.value);
                 if (amount > 0 && state.goals.length > 0) {
                     const distribution = state.goals.map(goal => ({
@@ -3132,7 +3141,9 @@
                 } else {
                     document.getElementById('distributionPreview').style.display = 'none';
                 }
-            });
+            }, 300);
+            
+            amountInput.addEventListener('input', updateDistributionPreview);
         });
 
         async function submitIncome() {
@@ -3370,7 +3381,7 @@
                     <div class="skeleton-subtitle" style="width: 100px; margin: 0 auto;"></div>
                 </div>
                 <div class="transactions-list">
-                    ${[1, 2, 3, 4, 5].map(() => `
+                    ${[1, 2, 3].map(() => `
                         <div class="skeleton-card" style="margin-bottom: 12px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                 <div class="skeleton-value" style="width: 120px; height: 24px;"></div>
@@ -3407,11 +3418,22 @@
                 const historyHtml = state.history.map((item, index) => {
                     const date = new Date(item.date);
                     
-                    // Описание дохода (если есть)
+                    // HTML-экранирование для безопасности
+                    function escapeHtml(unsafe) {
+                        if (!unsafe) return '';
+                        return String(unsafe)
+                            .replace(/&/g, "&amp;")
+                            .replace(/</g, "&lt;")
+                            .replace(/>/g, "&gt;")
+                            .replace(/"/g, "&quot;")
+                            .replace(/'/g, "&#039;");
+                    }
+                    
+                    // Описание дохода (если есть) - с экранированием XSS
                     const descriptionHtml = item.notes ? `
                         <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
                             <span style="font-size: 12px; color: var(--text-secondary);">📝</span>
-                            <span style="font-size: 13px; color: var(--text-secondary);">${item.notes}</span>
+                            <span style="font-size: 13px; color: var(--text-secondary);">${escapeHtml(item.notes)}</span>
                         </div>
                     ` : '';
                     
@@ -3465,7 +3487,7 @@
                             ${descriptionHtml}
                             ${distributionHtml}
                             <div class="history-actions">
-                                <button class="btn" onclick="undoIncome('${item.transaction_id}', ${item.amount}, '${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}')">
+                                <button class="btn" data-action="undo-income" data-transaction-id="${item.transaction_id}" data-amount="${item.amount}" data-date="${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}">
                                     Отменить
                                 </button>
                             </div>
@@ -3546,7 +3568,7 @@
                 `).join('');
                 
                 // Скелетные инсайты (6 штук для полного покрытия)
-                insightsContainer.innerHTML = Array.from({length: 6}, () => `
+                insightsContainer.innerHTML = Array.from({length: 3}, () => `
                     <div class="skeleton-metric-card" style="border-left: 3px solid var(--separator);">
                         <div class="skeleton-header"></div>
                         <div class="skeleton-value"></div>
@@ -3911,7 +3933,7 @@
                                 <div class="skeleton-value" style="width: 40%; margin: 12px auto;"></div>
                             </div>
                             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-                                ${Array.from({length: 6}, () => `
+                                ${Array.from({length: 3}, () => `
                                     <div class="skeleton-metric-card" style="padding: 20px;">
                                         <div class="skeleton-circle" style="width: 48px; height: 48px; margin: 0 auto 12px;"></div>
                                         <div class="skeleton-header" style="width: 80%; margin: 0 auto 8px;"></div>
@@ -3990,9 +4012,10 @@
                     const ctx = document.getElementById(chartId);
                     if (!ctx) return;
 
-                    // Уничтожаем старый график если есть
+                    // ИСПРАВЛЕНИЕ УТЕЧКИ ПАМЯТИ: Уничтожаем старый график если есть
                     if (this.charts[chartId]) {
                         this.charts[chartId].destroy();
+                        this.charts[chartId] = null; // Явно очищаем ссылку
                     }
 
                     const labels = data.map(d => this.formatMonthShort(d.month));
@@ -4060,8 +4083,10 @@
                     const ctx = document.getElementById(chartId);
                     if (!ctx) return;
 
+                    // ИСПРАВЛЕНИЕ УТЕЧКИ ПАМЯТИ
                     if (this.charts[chartId]) {
                         this.charts[chartId].destroy();
+                        this.charts[chartId] = null;
                     }
 
                     const labels = data.map(d => this.formatMonthShort(d.month));
@@ -4146,8 +4171,10 @@
                     const ctx = document.getElementById(chartId);
                     if (!ctx) return;
 
+                    // ИСПРАВЛЕНИЕ УТЕЧКИ ПАМЯТИ
                     if (this.charts[chartId]) {
                         this.charts[chartId].destroy();
+                        this.charts[chartId] = null;
                     }
 
                     const labels = data.monthlyData.map(d => this.formatMonthShort(d.month));
@@ -4308,8 +4335,10 @@
                     const ctx = document.getElementById(chartId);
                     if (!ctx) return;
 
+                    // ИСПРАВЛЕНИЕ УТЕЧКИ ПАМЯТИ
                     if (this.charts[chartId]) {
                         this.charts[chartId].destroy();
+                        this.charts[chartId] = null;
                     }
 
                     const colors = ['#007AFF', '#4CAF50', '#FF9500', '#9C27B0', '#F44336'];
@@ -4500,8 +4529,10 @@
                     const ctx = document.getElementById(chartId);
                     if (!ctx) return;
 
+                    // ИСПРАВЛЕНИЕ УТЕЧКИ ПАМЯТИ
                     if (this.charts[chartId]) {
                         this.charts[chartId].destroy();
+                        this.charts[chartId] = null;
                     }
 
                     const currentSaved = this.statsData.summary.totalSaved;
@@ -4577,7 +4608,7 @@
                         ${achievements.map(ach => `
                             <div class="metric-card" 
                                  style="text-align: center; padding: 20px; ${ach.unlocked ? 'cursor: pointer;' : 'opacity: 0.4; filter: grayscale(1);'}"
-                                 ${ach.unlocked ? `onclick="celebrateAchievement('${ach.emoji}', '${ach.title}')"` : ''}>
+                                 ${ach.unlocked ? `data-action="celebrate-achievement" data-emoji="${ach.emoji}" data-title="${ach.title}"` : ''}>
                                 <div style="font-size: 48px; margin-bottom: 12px;">${ach.emoji}</div>
                                 <div style="font-size: 14px; font-weight: 600; margin-bottom: 6px;">${ach.title}</div>
                                 <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">${ach.description}</div>
@@ -4626,22 +4657,11 @@
                 return 'neutral';
             },
 
-            getChangeIcon(change) {
-                if (change > 5) return '📈';
-                if (change < -5) return '🔻';
-                return '➡️';
-            },
 
             getTrendClass(trend) {
                 if (trend === 'up') return 'positive';
                 if (trend === 'down') return 'negative';
                 return 'neutral';
-            },
-
-            getTrendIcon(trend) {
-                if (trend === 'up') return '↗️';
-                if (trend === 'down') return '↘️';
-                return '→';
             },
 
             getTrendText(trend) {
@@ -4866,20 +4886,20 @@
                         
                         <div class="setting-item">
                             <div class="setting-label">Подтверждение доходов</div>
-                            <div class="toggle ${settings.require_confirmation ? 'active' : ''}" 
-                                 onclick="toggleSetting('require_confirmation')"></div>
+                            <div class="toggle ${settings.require_confirmation ? 'active' : ''}"
+                                 data-action="toggle-setting" data-setting="require_confirmation"></div>
                         </div>
 
                         <div class="setting-item">
                             <div class="setting-label">Уведомления</div>
-                            <div class="toggle ${settings.notifications_enabled ? 'active' : ''}" 
-                                 onclick="toggleSetting('notifications_enabled')"></div>
+                            <div class="toggle ${settings.notifications_enabled ? 'active' : ''}"
+                                 data-action="toggle-setting" data-setting="notifications_enabled"></div>
                         </div>
 
                         <div class="setting-item">
                             <div class="setting-label">Еженедельный отчет</div>
-                            <div class="toggle ${settings.weekly_report ? 'active' : ''}" 
-                                 onclick="toggleSetting('weekly_report')"></div>
+                            <div class="toggle ${settings.weekly_report ? 'active' : ''}"
+                                 data-action="toggle-setting" data-setting="weekly_report"></div>
                         </div>
                     </div>
 
@@ -4904,7 +4924,7 @@
                     <div class="settings-section">
                         <div class="settings-title">Отладка</div>
                         
-                        <div class="setting-item" style="cursor: pointer;" onclick="resetOnboarding()">
+                        <div class="setting-item" style="cursor: pointer;" data-action="reset-onboarding">
                             <div class="setting-label">🔄 Сбросить онбординг</div>
                         </div>
                     </div>
@@ -5029,6 +5049,101 @@
                     if (closeFunction) closeFunction();
                 }
             });
+        });
+
+        // ====== EVENT DELEGATION ======
+        // Централизованная обработка всех кликов через data-action
+        document.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-action]');
+            if (!target) return;
+            
+            const action = target.dataset.action;
+            
+            switch(action) {
+                // Навигация
+                case 'switch-page':
+                    switchPage(target.dataset.page);
+                    break;
+                case 'show-income-modal':
+                    showAddIncomeModal();
+                    break;
+                    
+                // Статистика
+                case 'navigate-stats':
+                    StatsModule.navigateTo(target.dataset.screen);
+                    break;
+                case 'stats-back':
+                    StatsModule.navigateBack();
+                    break;
+                case 'switch-period':
+                    StatsModule.switchPeriod(target.dataset.period);
+                    break;
+                    
+                // Модальные окна целей
+                case 'show-goal-modal':
+                    showGoalModal();
+                    break;
+                case 'close-goal-modal':
+                    closeGoalModal();
+                    break;
+                case 'save-goal':
+                    saveGoal();
+                    break;
+                case 'delete-goal':
+                    deleteGoal();
+                    break;
+                case 'handle-goal-click':
+                    handleGoalClick(parseInt(target.dataset.goalId));
+                    break;
+                    
+                // Модальные окна дохода
+                case 'close-income-modal':
+                    closeAddIncomeModal();
+                    break;
+                case 'submit-income':
+                    submitIncome();
+                    break;
+                    
+                // Отмена транзакций
+                case 'close-undo-modal':
+                    closeConfirmUndoModal();
+                    break;
+                case 'confirm-undo':
+                    confirmUndoIncome();
+                    break;
+                case 'undo-income':
+                    undoIncome(target.dataset.transactionId, parseFloat(target.dataset.amount), target.dataset.date);
+                    break;
+                    
+                // Выбор эмодзи и описаний
+                case 'select-description':
+                    selectDescription(e, target.dataset.label);
+                    break;
+                case 'select-emoji':
+                    selectEmoji(target.dataset.emoji);
+                    break;
+                    
+                // Достижения
+                case 'celebrate-achievement':
+                    celebrateAchievement(target.dataset.emoji, target.dataset.title);
+                    break;
+                    
+                // Онбординг
+                case 'start-onboarding':
+                    startOnboarding();
+                    break;
+                    
+                // Настройки
+                case 'reset-onboarding':
+                    resetOnboarding();
+                    break;
+                case 'reload-page':
+                    location.reload();
+                    break;
+                    
+                default:
+                    console.warn('Unknown action:', action);
+            }
         });
 
         // Start app
