@@ -1030,8 +1030,10 @@
             min-height: 52px !important;
             max-height: 52px !important;
             height: 52px !important;
-            padding: 0 !important;
+            padding: 0 16px !important;
             box-sizing: border-box !important;
+            flex-shrink: 0 !important;
+            overflow: hidden !important;
         }
         
         #confirmUndoBtn {
@@ -1041,19 +1043,41 @@
             min-height: 52px !important;
             max-height: 52px !important;
             height: 52px !important;
-            padding: 0 !important;
+            padding: 0 16px !important;
             box-sizing: border-box !important;
+            flex-shrink: 0 !important;
+            overflow: hidden !important;
+            width: auto !important;
         }
         
         /* Фиксируем размеры даже в состоянии загрузки */
         #confirmUndoBtn.loading,
         #submitIncomeBtn.loading {
-            width: 100% !important;
-            min-width: 100% !important;
-            max-width: 100% !important;
             min-height: 52px !important;
             max-height: 52px !important;
             height: 52px !important;
+            padding: 0 16px !important;
+            flex-shrink: 0 !important;
+            overflow: hidden !important;
+        }
+        
+        /* Дополнительная фиксация для кнопки отмены в группе */
+        .btn-group #confirmUndoBtn.loading {
+            flex: 1 !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            width: auto !important;
+        }
+        
+        /* Фиксация внутренних элементов кнопки */
+        #submitIncomeBtn .btn-text,
+        #submitIncomeBtn .btn-spinner,
+        #confirmUndoBtn .btn-text,
+        #confirmUndoBtn .btn-spinner {
+            position: absolute !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
         }
         
         /* Фиксируем размеры для всех кнопок в истории */
@@ -2036,13 +2060,13 @@
             }
             
             // Показываем тост вместо alert
-            showToast('🔄 Режим перемещения');
+            showToast('🔄 Перемещение');
             
             // Автоотключение через 10 секунд
             setTimeout(() => {
                 if (state.dragMode) {
                     disableDragMode();
-                    showToast('✅ Режим перемещения выключен');
+                    showToast('✅ Выключено');
                 }
             }, 10000);
         }
@@ -2083,7 +2107,7 @@
             showGoalModal();
         }
 
-        // Простой toast для уведомлений (вместо alert)
+        // Apple-style toast для уведомлений
         function showToast(message) {
             const existingToast = document.getElementById('toast');
             if (existingToast) existingToast.remove();
@@ -2093,28 +2117,43 @@
             toast.textContent = message;
             toast.style.cssText = `
                 position: fixed;
-                top: 20px;
+                top: 50%;
                 left: 50%;
-                transform: translateX(-50%);
-                background: rgba(0, 0, 0, 0.85);
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.92);
                 color: white;
-                padding: 12px 24px;
-                border-radius: 20px;
+                padding: 12px 20px;
+                border-radius: 12px;
                 font-size: 15px;
                 font-weight: 600;
                 z-index: 10000;
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                animation: toastSlideDown 0.3s ease;
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                text-align: center;
+                white-space: nowrap;
+                letter-spacing: -0.3px;
             `;
+            
+            // Анимация появления
+            toast.style.opacity = '0';
+            toast.style.transform = 'translate(-50%, -50%) scale(0.8)';
             
             document.body.appendChild(toast);
             
+            // Плавное появление
+            requestAnimationFrame(() => {
+                toast.style.transition = 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                toast.style.opacity = '1';
+                toast.style.transform = 'translate(-50%, -50%) scale(1)';
+            });
+            
+            // Исчезновение
             setTimeout(() => {
-                toast.style.animation = 'slideUp 0.3s ease';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, -50%) scale(0.9)';
                 setTimeout(() => toast.remove(), 300);
-            }, 2000);
+            }, 1800);
         }
 
         // ====== GOAL MODAL ======
@@ -2289,9 +2328,9 @@
                 if (!state.currentEditingGoal && state.goals.length === 0) {
                     localStorage.setItem('onboarding_completed', 'true');
                     state.onboardingCompleted = true;
-                    showToast('🎉 Первая цель создана!');
+                    showToast('🎉 Цель создана');
                 } else {
-                    showToast(state.currentEditingGoal ? '✅ Цель обновлена!' : '✅ Цель создана!');
+                    showToast(state.currentEditingGoal ? '✅ Обновлено' : '✅ Создано');
                 }
 
             } catch (error) {
@@ -2418,7 +2457,7 @@
                 await renderGoals();
                 
                 // Показываем toast вместо alert
-                showToast('✅ Доход добавлен и распределен!');
+                showToast('✅ Готово');
 
             } catch (error) {
                 showError('incomeModalError', error.message);
@@ -2560,7 +2599,7 @@
                 
                 // Показываем успех даже если были проблемы с UI (транзакция-то удалена)
                 celebrateWithConfetti();
-                showToast('🔙 Доход отменен');
+                showToast('↩️ Отменено');
 
             } catch (error) {
                 console.error('❌ ОШИБКА при отмене транзакции:', {
@@ -2861,7 +2900,7 @@
             state.onboardingCompleted = false;
             
             haptic('success');
-            showToast('🔄 Онбординг сброшен');
+            showToast('🔄 Сброшено');
             
             // Перезагружаем страницу целей
             setTimeout(() => {
