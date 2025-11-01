@@ -1023,11 +1023,21 @@
         }
         
         /* Фиксированный размер кнопок с загрузкой */
-        #confirmUndoBtn,
         #submitIncomeBtn {
             width: 100% !important;
             min-width: 100% !important;
             max-width: 100% !important;
+            min-height: 52px !important;
+            max-height: 52px !important;
+            height: 52px !important;
+            padding: 0 !important;
+            box-sizing: border-box !important;
+        }
+        
+        #confirmUndoBtn {
+            flex: 1 !important;
+            min-width: 0 !important;
+            max-width: none !important;
             min-height: 52px !important;
             max-height: 52px !important;
             height: 52px !important;
@@ -1311,7 +1321,7 @@
 
             <div class="modal-sticky-footer">
                 <button class="btn btn-primary" id="submitIncomeBtn" onclick="submitIncome()">
-                    <span class="btn-text">Добавить</span>
+                    <span class="btn-text">Добавить доход</span>
                     <span class="btn-spinner"></span>
                 </button>
             </div>
@@ -1333,7 +1343,7 @@
                 <div class="btn-group" style="margin-top: 20px;">
                     <button class="btn btn-secondary" onclick="closeConfirmUndoModal()">Отмена</button>
                     <button class="btn btn-primary" id="confirmUndoBtn" style="background: var(--apple-red); box-shadow: 0 4px 12px rgba(255, 59, 48, 0.25);" onclick="confirmUndoIncome()">
-                        <span class="btn-text">Отменить</span>
+                        <span class="btn-text">Отменить доход</span>
                         <span class="btn-spinner"></span>
                     </button>
                 </div>
