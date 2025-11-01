@@ -3536,41 +3536,22 @@
                     return;
                 }
                 
-                // Скелетные карточки метрик (4 штуки)
-                metricsGrid.innerHTML = `
+                // Скелетные карточки метрик (4 штуки - это правильно для главного экрана)
+                metricsGrid.innerHTML = Array.from({length: 4}, () => `
                     <div class="skeleton-metric-card">
                         <div class="skeleton-header"></div>
                         <div class="skeleton-value"></div>
                         <div class="skeleton-subtitle"></div>
                     </div>
-                    <div class="skeleton-metric-card">
-                        <div class="skeleton-header"></div>
-                        <div class="skeleton-value"></div>
-                        <div class="skeleton-subtitle"></div>
-                    </div>
-                    <div class="skeleton-metric-card">
-                        <div class="skeleton-header"></div>
-                        <div class="skeleton-value"></div>
-                        <div class="skeleton-subtitle"></div>
-                    </div>
-                    <div class="skeleton-metric-card">
-                        <div class="skeleton-header"></div>
-                        <div class="skeleton-value"></div>
-                        <div class="skeleton-subtitle"></div>
-                    </div>
-                `;
+                `).join('');
                 
-                // Скелетные инсайты (2 штуки)
-                insightsContainer.innerHTML = `
+                // Скелетные инсайты (6 штук для полного покрытия)
+                insightsContainer.innerHTML = Array.from({length: 6}, () => `
                     <div class="skeleton-metric-card" style="border-left: 3px solid var(--separator);">
                         <div class="skeleton-header"></div>
                         <div class="skeleton-value"></div>
                     </div>
-                    <div class="skeleton-metric-card" style="border-left: 3px solid var(--separator);">
-                        <div class="skeleton-header"></div>
-                        <div class="skeleton-value"></div>
-                    </div>
-                `;
+                `).join('');
             },
 
             // Загрузка данных с API
@@ -3833,22 +3814,117 @@
 
             // Загрузка контента экрана
             loadScreenContent(screen) {
+                // Показываем скелеты перед загрузкой контента
+                this.renderScreenSkeleton(screen);
+                
+                // Небольшая задержка для видимости скелета
+                setTimeout(() => {
+                    switch(screen) {
+                        case 'periods':
+                            this.renderPeriodsScreen();
+                            break;
+                        case 'goals':
+                            this.renderGoalsScreen();
+                            break;
+                        case 'transactions':
+                            this.renderTransactionsScreen();
+                            break;
+                        case 'forecasts':
+                            this.renderForecastsScreen();
+                            break;
+                        case 'achievements':
+                            this.renderAchievementsScreen();
+                            break;
+                    }
+                }, 200);
+            },
+
+            // Рендер скелета для конкретного экрана
+            renderScreenSkeleton(screen) {
+                let container;
+                let skeletonHtml = '';
+                
                 switch(screen) {
                     case 'periods':
-                        this.renderPeriodsScreen();
+                        container = document.getElementById('periodContent');
+                        skeletonHtml = `
+                            <div class="stats-metrics-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                                ${Array.from({length: 3}, () => `
+                                    <div class="skeleton-metric-card">
+                                        <div class="skeleton-header"></div>
+                                        <div class="skeleton-value"></div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
                         break;
                     case 'goals':
-                        this.renderGoalsScreen();
+                        container = document.getElementById('goalsContent');
+                        skeletonHtml = `
+                            <div class="chart-container">
+                                <div class="skeleton-metric-card" style="height: 250px;"></div>
+                            </div>
+                            <div class="stats-metrics-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px;">
+                                ${Array.from({length: 3}, () => `
+                                    <div class="skeleton-metric-card">
+                                        <div class="skeleton-header"></div>
+                                        <div class="skeleton-value"></div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
                         break;
                     case 'transactions':
-                        this.renderTransactionsScreen();
+                        container = document.getElementById('transactionsContent');
+                        skeletonHtml = `
+                            <div class="stats-metrics-grid" style="grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;">
+                                ${Array.from({length: 4}, () => `
+                                    <div class="skeleton-metric-card">
+                                        <div class="skeleton-header"></div>
+                                        <div class="skeleton-value"></div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
                         break;
                     case 'forecasts':
-                        this.renderForecastsScreen();
+                        container = document.getElementById('forecastsContent');
+                        skeletonHtml = `
+                            <div class="stats-metrics-grid" style="grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
+                                ${Array.from({length: 2}, () => `
+                                    <div class="skeleton-metric-card">
+                                        <div class="skeleton-header"></div>
+                                        <div class="skeleton-value"></div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="chart-container">
+                                <div class="skeleton-metric-card" style="height: 250px;"></div>
+                            </div>
+                        `;
                         break;
                     case 'achievements':
-                        this.renderAchievementsScreen();
+                        container = document.getElementById('achievementsContent');
+                        skeletonHtml = `
+                            <div class="skeleton-metric-card" style="text-align: center; margin-bottom: 24px; padding: 16px;">
+                                <div class="skeleton-header" style="width: 60%; margin: 0 auto;"></div>
+                                <div class="skeleton-value" style="width: 40%; margin: 12px auto;"></div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                                ${Array.from({length: 6}, () => `
+                                    <div class="skeleton-metric-card" style="padding: 20px;">
+                                        <div class="skeleton-circle" style="width: 48px; height: 48px; margin: 0 auto 12px;"></div>
+                                        <div class="skeleton-header" style="width: 80%; margin: 0 auto 8px;"></div>
+                                        <div class="skeleton-subtitle" style="width: 90%; margin: 0 auto;"></div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
                         break;
+                }
+                
+                if (container && skeletonHtml) {
+                    container.innerHTML = skeletonHtml;
                 }
             },
 
@@ -4390,13 +4466,13 @@
 
                     <!-- Ближайшие цели -->
                     <h3 style="font-size: 16px; margin: 24px 0 12px; color: var(--text-secondary);">Ближайшие цели</h3>
-                    ${forecast.goalCompletions && forecast.goalCompletions.length > 0 ? 
+                    ${forecast.goalCompletions && forecast.goalCompletions.length > 0 ?
                         forecast.goalCompletions.map(goal => `
                             <div class="metric-card" style="margin-bottom: 12px;">
                                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                                    <span style="font-size: 28px;">${goal.emoji}</span>
+                                    <span style="font-size: 28px;">${goal.emoji || '🎯'}</span>
                                     <div style="flex: 1;">
-                                        <div style="font-size: 16px; font-weight: 600;">${goal.name}</div>
+                                        <div style="font-size: 16px; font-weight: 600;">${goal.goalName || goal.name || 'Цель'}</div>
                                         <div style="font-size: 12px; color: var(--text-secondary);">
                                             Осталось накопить: ${formatNumber(goal.remaining)} ₽
                                         </div>
@@ -4529,8 +4605,18 @@
                 });
                 document.querySelector(`[data-period="${period}"]`).classList.add('active');
                 
-                // Перерендериваем контент
-                this.renderPeriodsScreen();
+                // Показываем скелет перед перерендерингом
+                const container = document.getElementById('periodContent');
+                container.innerHTML = `
+                    <div class="chart-container">
+                        <div class="skeleton-metric-card" style="height: 250px;"></div>
+                    </div>
+                `;
+                
+                // Перерендериваем контент с задержкой
+                setTimeout(() => {
+                    this.renderPeriodsScreen();
+                }, 200);
             },
 
             // Вспомогательные методы
