@@ -1869,6 +1869,7 @@
             <div class="nav-label">Статистика</div>
         </div>
         <div class="nav-item" data-action="switch-page" data-page="settings">
+            <div class="nav-icon">⚙️</div>
             <div class="nav-label">Настройки</div>
         </div>
     </div>
@@ -1883,7 +1884,7 @@
     <div id="goalModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title" id="goalModalTitle">➕ Новая цель</div>
+                <div class="modal-title" id="goalModalTitle">Новая цель</div>
                 <button class="modal-close" data-action="close-goal-modal">×</button>
             </div>
             <div id="goalModalError"></div>
@@ -1929,7 +1930,7 @@
     <div id="addIncomeModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title">💰 Добавить доход</div>
+                <div class="modal-title">Добавить доход</div>
                 <button class="modal-close" data-action="close-income-modal">×</button>
             </div>
             <div id="incomeModalError"></div>
@@ -2913,7 +2914,7 @@
             const currentAmountGroup = DOMCache.get('currentAmountGroup');
 
             if (state.currentEditingGoal) {
-                title.textContent = '✏️ Редактировать цель';
+                title.textContent = 'Редактировать цель';
                 deleteBtn.style.display = 'block';
                 currentAmountGroup.style.display = 'block';
                 
@@ -2923,7 +2924,7 @@
                 DOMCache.get('goalTarget').value = state.currentEditingGoal.target_amount || '';
                 DOMCache.get('goalCurrent').value = state.currentEditingGoal.current_amount || 0;
             } else {
-                title.textContent = '➕ Новая цель';
+                title.textContent = 'Новая цель';
                 deleteBtn.style.display = 'none';
                 currentAmountGroup.style.display = 'none';
                 
@@ -3598,6 +3599,7 @@
                 console.log('💀 renderSkeletonScreens() вызван');
                 const metricsGrid = document.getElementById('statsMetricsGrid');
                 const insightsContainer = document.getElementById('statsInsights');
+                const navigationMenu = document.querySelector('.stats-navigation-menu');
                 
                 if (!metricsGrid || !insightsContainer) {
                     console.warn('⚠️ Не найдены элементы для скелетных экранов');
@@ -3613,7 +3615,20 @@
                     </div>
                 `).join('');
                 
-                // Скелетные инсайты (6 штук для полного покрытия)
+                // Скелетные карточки навигации в секции "Детали"
+                if (navigationMenu) {
+                    navigationMenu.innerHTML = Array.from({length: 5}, () => `
+                        <div class="skeleton-card" style="padding: 16px; margin-bottom: 10px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="skeleton-circle" style="width: 24px; height: 24px;"></div>
+                                <div class="skeleton-header" style="width: 60%; flex: 1;"></div>
+                                <div class="skeleton-subtitle" style="width: 20px;"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                // Скелетные инсайты (2 штуки для полного покрытия)
                 insightsContainer.innerHTML = Array.from({length: 2}, () => `
                     <div class="skeleton-metric-card" style="border-left: 3px solid var(--separator);">
                         <div class="skeleton-header"></div>
