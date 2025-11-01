@@ -3249,9 +3249,6 @@
 
             // Загрузка данных с API
             async loadStatsData() {
-                const container = document.getElementById('statsContent');
-                container.innerHTML = '<div class="loading"><div class="spinner"></div><div>Загрузка статистики...</div></div>';
-
                 const response = await apiRequest(`/stats/${USER_ID}`);
                 
                 // API возвращает массив [{success: true, data: {...}}]
