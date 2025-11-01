@@ -9,6 +9,8 @@
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@3.0.0/index.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -1188,6 +1190,374 @@
             font-size: 14px;
             color: var(--text-secondary);
         }
+
+        /* === Статистика === */
+        .stats-screen {
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .stats-screen.active {
+            display: block;
+        }
+
+        .stats-screen.slide-left {
+            animation: slideOutLeft 0.3s ease-in-out;
+        }
+
+        .stats-screen.slide-right {
+            animation: slideInRight 0.3s ease-in-out;
+        }
+
+        @keyframes slideOutLeft {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .stats-header {
+            margin-bottom: 20px;
+        }
+
+        .stats-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 400px) {
+            .stats-metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 0.5px solid var(--separator);
+            animation: fadeInUp 0.4s ease-out backwards;
+            box-shadow: var(--card-shadow);
+        }
+
+        .metric-card:nth-child(1) { animation-delay: 0s; }
+        .metric-card:nth-child(2) { animation-delay: 0.05s; }
+        .metric-card:nth-child(3) { animation-delay: 0.1s; }
+        .metric-card:nth-child(4) { animation-delay: 0.15s; }
+
+        .metric-card:active {
+            transform: scale(0.98);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .metric-icon {
+            font-size: 24px;
+        }
+
+        .metric-title {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .metric-change {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .metric-change.positive {
+            color: #4CAF50;
+        }
+
+        .metric-change.negative {
+            color: #F44336;
+        }
+
+        .metric-change.neutral {
+            color: var(--text-secondary);
+        }
+
+        .metric-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .section-divider {
+            margin: 32px 0 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .section-divider::before,
+        .section-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: calc(50% - 60px);
+            height: 1px;
+            background: var(--separator);
+        }
+
+        .section-divider::before {
+            left: 0;
+        }
+
+        .section-divider::after {
+            right: 0;
+        }
+
+        .section-divider span {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 12px;
+            background: var(--bg-primary);
+        }
+
+        .stats-navigation-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .stats-nav-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 0.5px solid var(--separator);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--card-shadow);
+        }
+
+        .stats-nav-card:active {
+            transform: translateX(2px) scale(0.98);
+        }
+
+        .nav-icon-stats {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .nav-title-stats {
+            flex: 1;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .nav-arrow-stats {
+            font-size: 18px;
+            color: var(--text-secondary);
+            transition: transform 0.2s ease;
+        }
+
+        .stats-nav-card:active .nav-arrow-stats {
+            transform: translateX(4px);
+        }
+
+        .stats-insights {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .insight-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            border-left: 3px solid;
+            animation: fadeInUp 0.4s ease-out;
+            box-shadow: var(--card-shadow);
+        }
+
+        .insight-card.income_decline {
+            border-left-color: #F44336;
+        }
+
+        .insight-card.income_growth {
+            border-left-color: #4CAF50;
+        }
+
+        .insight-card.goal_progress {
+            border-left-color: var(--apple-blue);
+        }
+
+        .insight-card.stability {
+            border-left-color: #FFC107;
+        }
+
+        .insight-card.goal_near {
+            border-left-color: #9C27B0;
+        }
+
+        .insight-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .insight-icon {
+            font-size: 20px;
+        }
+
+        .insight-message {
+            font-size: 14px;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .loading-skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 12px;
+            height: 120px;
+        }
+
+        .stats-screen-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .back-button {
+            background: rgba(0, 122, 255, 0.1);
+            border: 1px solid rgba(0, 122, 255, 0.2);
+            color: var(--apple-blue);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .back-button:active {
+            background: rgba(0, 122, 255, 0.2);
+            border-color: rgba(0, 122, 255, 0.4);
+        }
+
+        .period-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            padding-bottom: 4px;
+        }
+
+        .period-tab {
+            background: var(--input-bg);
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .period-tab.active {
+            background: var(--apple-blue);
+            border-color: var(--apple-blue);
+            color: #fff;
+        }
+
+        .period-content {
+            margin-top: 20px;
+        }
+
+        .chart-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+            border: 0.5px solid var(--separator);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 250px;
+        }
+
+        .error-card {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .error-message {
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .retry-button {
+            background: var(--apple-blue);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .retry-button:active {
+            transform: scale(0.96);
+        }
     </style>
 </head>
 <body>
@@ -1206,7 +1576,128 @@
 
     <!-- Stats Page -->
     <div id="statsPage" class="page">
-        <div id="statsContent"></div>
+        <div id="statsContent">
+            <!-- Главный экран статистики -->
+            <div id="statsMainScreen" class="stats-screen active">
+                <!-- Сетка метрик 2x2 -->
+                <div class="stats-metrics-grid" id="statsMetricsGrid">
+                    <!-- Карточки рендерятся через JS -->
+                </div>
+
+                <!-- Разделитель -->
+                <div class="section-divider">
+                    <span>Детали</span>
+                </div>
+
+                <!-- Меню навигации -->
+                <div class="stats-navigation-menu">
+                    <div class="stats-nav-card" onclick="StatsModule.navigateTo('periods')">
+                        <div class="nav-icon-stats">📅</div>
+                        <div class="nav-title-stats">По периодам</div>
+                        <div class="nav-arrow-stats">→</div>
+                    </div>
+                    <div class="stats-nav-card" onclick="StatsModule.navigateTo('goals')">
+                        <div class="nav-icon-stats">🎯</div>
+                        <div class="nav-title-stats">По целям</div>
+                        <div class="nav-arrow-stats">→</div>
+                    </div>
+                    <div class="stats-nav-card" onclick="StatsModule.navigateTo('transactions')">
+                        <div class="nav-icon-stats">📊</div>
+                        <div class="nav-title-stats">Транзакции</div>
+                        <div class="nav-arrow-stats">→</div>
+                    </div>
+                    <div class="stats-nav-card" onclick="StatsModule.navigateTo('forecasts')">
+                        <div class="nav-icon-stats">🔮</div>
+                        <div class="nav-title-stats">Прогнозы</div>
+                        <div class="nav-arrow-stats">→</div>
+                    </div>
+                    <div class="stats-nav-card" onclick="StatsModule.navigateTo('achievements')">
+                        <div class="nav-icon-stats">🏆</div>
+                        <div class="nav-title-stats">Достижения</div>
+                        <div class="nav-arrow-stats">→</div>
+                    </div>
+                </div>
+
+                <!-- Разделитель -->
+                <div class="section-divider">
+                    <span>Инсайты</span>
+                </div>
+
+                <!-- Секция инсайтов -->
+                <div class="stats-insights" id="statsInsights">
+                    <!-- Инсайты рендерятся через JS -->
+                </div>
+            </div>
+
+            <!-- Экран "По периодам" -->
+            <div id="statsPeriodsScreen" class="stats-screen">
+                <div class="stats-screen-header">
+                    <button class="back-button" onclick="StatsModule.navigateBack()">← Назад</button>
+                    <h2 style="flex: 1; margin: 0; font-size: 20px;">📅 По периодам</h2>
+                </div>
+
+                <!-- Табы периодов -->
+                <div class="period-tabs" id="periodTabs">
+                    <div class="period-tab active" data-period="month" onclick="StatsModule.switchPeriod('month')">Месяц</div>
+                    <div class="period-tab" data-period="3months" onclick="StatsModule.switchPeriod('3months')">3 месяца</div>
+                    <div class="period-tab" data-period="6months" onclick="StatsModule.switchPeriod('6months')">6 месяцев</div>
+                    <div class="period-tab" data-period="year" onclick="StatsModule.switchPeriod('year')">Год</div>
+                </div>
+
+                <!-- Контент периодов -->
+                <div class="period-content" id="periodContent">
+                    <!-- Графики рендерятся через JS -->
+                </div>
+            </div>
+
+            <!-- Экран "По целям" -->
+            <div id="statsGoalsScreen" class="stats-screen">
+                <div class="stats-screen-header">
+                    <button class="back-button" onclick="StatsModule.navigateBack()">← Назад</button>
+                    <h2 style="flex: 1; margin: 0; font-size: 20px;">🎯 По целям</h2>
+                </div>
+
+                <div id="goalsContent">
+                    <!-- Контент рендерится через JS -->
+                </div>
+            </div>
+
+            <!-- Экран "Транзакции" -->
+            <div id="statsTransactionsScreen" class="stats-screen">
+                <div class="stats-screen-header">
+                    <button class="back-button" onclick="StatsModule.navigateBack()">← Назад</button>
+                    <h2 style="flex: 1; margin: 0; font-size: 20px;">📊 Транзакции</h2>
+                </div>
+
+                <div id="transactionsContent">
+                    <!-- Контент рендерится через JS -->
+                </div>
+            </div>
+
+            <!-- Экран "Прогнозы" -->
+            <div id="statsForecastsScreen" class="stats-screen">
+                <div class="stats-screen-header">
+                    <button class="back-button" onclick="StatsModule.navigateBack()">← Назад</button>
+                    <h2 style="flex: 1; margin: 0; font-size: 20px;">🔮 Прогнозы</h2>
+                </div>
+
+                <div id="forecastsContent">
+                    <!-- Контент рендерится через JS -->
+                </div>
+            </div>
+
+            <!-- Экран "Достижения" -->
+            <div id="statsAchievementsScreen" class="stats-screen">
+                <div class="stats-screen-header">
+                    <button class="back-button" onclick="StatsModule.navigateBack()">← Назад</button>
+                    <h2 style="flex: 1; margin: 0; font-size: 20px;">🏆 Достижения</h2>
+                </div>
+
+                <div id="achievementsContent">
+                    <!-- Контент рендерится через JS -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Settings Page -->
@@ -1546,6 +2037,13 @@
             });
             
             haptic('success');
+        }
+
+        // ====== ACHIEVEMENT CELEBRATION ======
+        function celebrateAchievement(emoji, title) {
+            haptic('success');
+            celebrateWithConfetti();
+            showToast(`${emoji} ${title}`);
         }
 
         function showError(elementId, message) {
@@ -1912,6 +2410,13 @@
 
                 // Initialize drag and drop
                 initSortable();
+                
+                // Настройка pull-to-refresh для экрана целей
+                setTimeout(() => {
+                    setupPullToRefresh(container, async () => {
+                        await renderGoals();
+                    });
+                }, 300);
 
             } catch (error) {
                 container.innerHTML = `<div class="error">Ошибка загрузки целей: ${error.message}</div>`;
@@ -2707,6 +3212,13 @@
                 }).join('');
 
                 container.innerHTML = historyHtml;
+                
+                // Настройка pull-to-refresh для экрана истории
+                setTimeout(() => {
+                    setupPullToRefresh(container, async () => {
+                        await renderHistory();
+                    });
+                }, 300);
 
             } catch (error) {
                 container.innerHTML = `<div class="error">Ошибка загрузки истории: ${error.message}</div>`;
@@ -2718,58 +3230,994 @@
             showConfirmUndoModal(transactionId, amount, dateStr);
         }
 
-        // ====== STATISTICS ======
-        async function renderStats() {
-            const container = document.getElementById('statsContent');
-            container.innerHTML = '<div class="loading"><div class="spinner"></div><div>Загрузка статистики...</div></div>';
+        // ====== STATISTICS MODULE ======
+        const StatsModule = {
+            currentScreen: 'main',
+            currentPeriod: 'month',
+            statsData: null,
+            charts: {},
 
-            try {
-                await loadStats();
+            // Инициализация модуля
+            async init() {
+                try {
+                    await this.loadStatsData();
+                    this.renderMainScreen();
+                } catch (error) {
+                    this.showError('Ошибка загрузки данных: ' + error.message);
+                }
+            },
 
-                const stats = state.stats;
+            // Загрузка данных с API
+            async loadStatsData() {
+                const container = document.getElementById('statsContent');
+                container.innerHTML = '<div class="loading"><div class="spinner"></div><div>Загрузка статистики...</div></div>';
 
+                const data = await apiRequest(`/stats/${USER_ID}`);
+                this.statsData = data.data;
+                
+                console.log('📊 Статистика загружена:', this.statsData);
+            },
+
+            // Рендер главного экрана
+            renderMainScreen() {
+                if (!this.statsData) return;
+
+                const data = this.statsData;
+                
+                // Рендерим 4 карточки метрик
+                this.renderMetricCards(data.summary);
+                
+                // Рендерим инсайты
+                this.renderInsights(data.insights);
+            },
+
+            // Рендер карточек метрик
+            renderMetricCards(summary) {
+                const container = document.getElementById('statsMetricsGrid');
+                
+                const metrics = [
+                    {
+                        icon: '💰',
+                        title: 'Накоплено',
+                        value: formatNumber(summary.totalSaved) + ' ₽',
+                        change: summary.totalSavedChange,
+                        subtitle: 'За последний месяц'
+                    },
+                    {
+                        icon: '📈',
+                        title: 'Доход',
+                        value: formatNumber(summary.totalIncome) + ' ₽',
+                        change: summary.totalIncomeChange,
+                        subtitle: 'Всего получено'
+                    },
+                    {
+                        icon: '📝',
+                        title: 'Транзакций',
+                        value: summary.transactionCount,
+                        subtitle: `+${summary.transactionCountMonth} за месяц`,
+                        change: null
+                    },
+                    {
+                        icon: '💵',
+                        title: 'Средний доход',
+                        value: formatNumber(summary.averageIncome) + ' ₽',
+                        trend: summary.averageIncomeTrend,
+                        subtitle: this.getTrendText(summary.averageIncomeTrend)
+                    }
+                ];
+
+                container.innerHTML = metrics.map(m => `
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-icon">${m.icon}</span>
+                            <span class="metric-title">${m.title}</span>
+                        </div>
+                        <div class="metric-value">${m.value}</div>
+                        ${m.change !== null && m.change !== undefined ? `
+                            <div class="metric-change ${this.getChangeClass(m.change)}">
+                                ${this.getChangeIcon(m.change)} ${Math.abs(m.change).toFixed(1)}%
+                            </div>
+                        ` : ''}
+                        ${m.trend ? `
+                            <div class="metric-change ${this.getTrendClass(m.trend)}">
+                                ${this.getTrendIcon(m.trend)} ${m.subtitle}
+                            </div>
+                        ` : m.subtitle ? `
+                            <div class="metric-subtitle">${m.subtitle}</div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            },
+
+            // Рендер инсайтов
+            renderInsights(insights) {
+                const container = document.getElementById('statsInsights');
+                
+                if (!insights || insights.length === 0) {
+                    container.innerHTML = `
+                        <div class="insight-card" style="border-left-color: var(--text-secondary);">
+                            <div class="insight-header">
+                                <span class="insight-icon">💡</span>
+                            </div>
+                            <div class="insight-message">Пока нет интересных инсайтов. Продолжайте копить!</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = insights.map(insight => `
+                    <div class="insight-card ${insight.type}">
+                        <div class="insight-header">
+                            <span class="insight-icon">💡</span>
+                        </div>
+                        <div class="insight-message">${insight.message}</div>
+                    </div>
+                `).join('');
+            },
+
+            // Навигация между экранами
+            navigateTo(screen) {
+                haptic('medium');
+                
+                // Скрываем текущий экран
+                document.querySelectorAll('.stats-screen').forEach(s => {
+                    s.classList.remove('active');
+                    s.classList.add('slide-left');
+                });
+
+                setTimeout(() => {
+                    document.querySelectorAll('.stats-screen').forEach(s => {
+                        s.classList.remove('slide-left');
+                    });
+
+                    // Показываем новый экран
+                    const screenMap = {
+                        'periods': 'statsPeriodsScreen',
+                        'goals': 'statsGoalsScreen',
+                        'transactions': 'statsTransactionsScreen',
+                        'forecasts': 'statsForecastsScreen',
+                        'achievements': 'statsAchievementsScreen'
+                    };
+
+                    const screenId = screenMap[screen];
+                    if (screenId) {
+                        document.getElementById(screenId).classList.add('active', 'slide-right');
+                        this.currentScreen = screen;
+                        
+                        // Загружаем контент экрана
+                        this.loadScreenContent(screen);
+                    }
+                }, 300);
+            },
+
+            // Возврат на главный экран
+            navigateBack() {
+                haptic('light');
+                
+                document.querySelectorAll('.stats-screen').forEach(s => {
+                    s.classList.remove('active', 'slide-right');
+                });
+
+                document.getElementById('statsMainScreen').classList.add('active');
+                this.currentScreen = 'main';
+            },
+
+            // Загрузка контента экрана
+            loadScreenContent(screen) {
+                switch(screen) {
+                    case 'periods':
+                        this.renderPeriodsScreen();
+                        break;
+                    case 'goals':
+                        this.renderGoalsScreen();
+                        break;
+                    case 'transactions':
+                        this.renderTransactionsScreen();
+                        break;
+                    case 'forecasts':
+                        this.renderForecastsScreen();
+                        break;
+                    case 'achievements':
+                        this.renderAchievementsScreen();
+                        break;
+                }
+            },
+
+            // Экран "По периодам"
+            renderPeriodsScreen() {
+                const container = document.getElementById('periodContent');
+                
+                if (!this.statsData) {
+                    container.innerHTML = '<div class="error-card"><div class="error-message">Нет данных</div></div>';
+                    return;
+                }
+
+                const periods = this.statsData.periods;
+                
+                switch(this.currentPeriod) {
+                    case 'month':
+                        this.renderMonthPeriod(container, periods.currentMonth);
+                        break;
+                    case '3months':
+                        this.render3MonthsPeriod(container, periods.last3Months);
+                        break;
+                    case '6months':
+                        this.render6MonthsPeriod(container, periods.last6Months);
+                        break;
+                    case 'year':
+                        this.renderYearPeriod(container, periods.year);
+                        break;
+                }
+            },
+
+            // Месяц - 3 карточки
+            renderMonthPeriod(container, data) {
                 container.innerHTML = `
-                    <div class="header">
-                        <h1>📈 Статистика</h1>
-                    </div>
-
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-label">Всего накоплено</div>
-                            <div class="stat-value">${formatNumber(stats.total_savings || 0)} ₽</div>
+                    <div class="stats-metrics-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                        <div class="metric-card">
+                            <div class="metric-title">Доход</div>
+                            <div class="metric-value" style="font-size: 20px;">${formatNumber(data.income)} ₽</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Общий доход</div>
-                            <div class="stat-value">${formatNumber(stats.total_income || 0)} ₽</div>
+                        <div class="metric-card">
+                            <div class="metric-title">Транзакций</div>
+                            <div class="metric-value" style="font-size: 20px;">${data.transactions}</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Транзакций</div>
-                            <div class="stat-value">${stats.transaction_count || 0}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Средний доход</div>
-                            <div class="stat-value">${formatNumber(stats.average_income || 0)} ₽</div>
+                        <div class="metric-card">
+                            <div class="metric-title">Средний чек</div>
+                            <div class="metric-value" style="font-size: 20px;">${formatNumber(data.average)} ₽</div>
                         </div>
                     </div>
+                `;
+            },
 
-                    ${stats.goal_forecasts && stats.goal_forecasts.length > 0 ? `
-                        <div class="settings-section">
-                            <div class="settings-title">🎯 Прогноз достижения целей</div>
-                            ${stats.goal_forecasts.map(forecast => `
-                                <div class="setting-item">
-                                    <div>
-                                        <div class="setting-label">${forecast.emoji} ${forecast.goal_name}</div>
-                                        <div class="input-hint">${forecast.estimated_months} мес. (${forecast.estimated_date})</div>
-                                    </div>
-                                </div>
-                            `).join('')}
+            // 3 месяца - столбчатая диаграмма
+            render3MonthsPeriod(container, data) {
+                const chartId = 'chart3months';
+                container.innerHTML = `
+                    <div class="chart-container">
+                        <div class="chart-wrapper">
+                            <canvas id="${chartId}"></canvas>
                         </div>
-                    ` : ''}
+                    </div>
                 `;
 
-            } catch (error) {
-                container.innerHTML = `<div class="error">Ошибка загрузки статистики: ${error.message}</div>`;
+                setTimeout(() => {
+                    const ctx = document.getElementById(chartId);
+                    if (!ctx) return;
+
+                    // Уничтожаем старый график если есть
+                    if (this.charts[chartId]) {
+                        this.charts[chartId].destroy();
+                    }
+
+                    const labels = data.map(d => this.formatMonthShort(d.month));
+                    const values = data.map(d => d.income);
+
+                    this.charts[chartId] = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Доход (₽)',
+                                data: values,
+                                backgroundColor: 'rgba(0, 122, 255, 0.8)',
+                                borderColor: 'rgba(0, 122, 255, 1)',
+                                borderWidth: 1,
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => formatNumber(context.parsed.y) + ' ₽'
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: (value) => this.formatLargeNumber(value)
+                                    },
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }, 100);
+            },
+
+            // 6 месяцев - линейный график
+            render6MonthsPeriod(container, data) {
+                const chartId = 'chart6months';
+                container.innerHTML = `
+                    <div class="chart-container">
+                        <div class="chart-wrapper">
+                            <canvas id="${chartId}"></canvas>
+                        </div>
+                    </div>
+                `;
+
+                setTimeout(() => {
+                    const ctx = document.getElementById(chartId);
+                    if (!ctx) return;
+
+                    if (this.charts[chartId]) {
+                        this.charts[chartId].destroy();
+                    }
+
+                    const labels = data.map(d => this.formatMonthShort(d.month));
+                    const values = data.map(d => d.income);
+
+                    this.charts[chartId] = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Доход (₽)',
+                                data: values,
+                                borderColor: 'rgba(0, 122, 255, 1)',
+                                backgroundColor: 'rgba(0, 122, 255, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => formatNumber(context.parsed.y) + ' ₽'
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: (value) => this.formatLargeNumber(value)
+                                    },
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }, 100);
+            },
+
+            // Год - карточки + комбинированный график
+            renderYearPeriod(container, data) {
+                const chartId = 'chartYear';
+                container.innerHTML = `
+                    <div class="stats-metrics-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+                        <div class="metric-card">
+                            <div class="metric-title">Годовой доход</div>
+                            <div class="metric-value" style="font-size: 18px;">${formatNumber(data.income)} ₽</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-title">Средний/мес</div>
+                            <div class="metric-value" style="font-size: 18px;">${formatNumber(data.averageMonthly)} ₽</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-title">Лучший месяц</div>
+                            <div class="metric-value" style="font-size: 14px;">${this.formatMonthFull(data.bestMonth.month)}</div>
+                            <div class="metric-subtitle">${formatNumber(data.bestMonth.income)} ₽</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-wrapper">
+                            <canvas id="${chartId}"></canvas>
+                        </div>
+                    </div>
+                `;
+
+                setTimeout(() => {
+                    const ctx = document.getElementById(chartId);
+                    if (!ctx) return;
+
+                    if (this.charts[chartId]) {
+                        this.charts[chartId].destroy();
+                    }
+
+                    const labels = data.monthlyData.map(d => this.formatMonthShort(d.month));
+                    const values = data.monthlyData.map(d => d.income);
+
+                    this.charts[chartId] = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Доход (₽)',
+                                data: values,
+                                backgroundColor: values.map(v =>
+                                    v === data.bestMonth.income ? 'rgba(52, 199, 89, 0.8)' : 'rgba(0, 122, 255, 0.8)'
+                                ),
+                                borderColor: values.map(v =>
+                                    v === data.bestMonth.income ? 'rgba(52, 199, 89, 1)' : 'rgba(0, 122, 255, 1)'
+                                ),
+                                borderWidth: 1,
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => formatNumber(context.parsed.y) + ' ₽'
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: (value) => this.formatLargeNumber(value)
+                                    },
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }, 100);
+            },
+
+            // Форматирование месяцев
+            formatMonthShort(monthStr) {
+                const months = {
+                    '01': 'янв', '02': 'фев', '03': 'мар', '04': 'апр',
+                    '05': 'май', '06': 'июн', '07': 'июл', '08': 'авг',
+                    '09': 'сен', '10': 'окт', '11': 'ноя', '12': 'дек'
+                };
+                const month = monthStr.split('-')[1];
+                return months[month] || monthStr;
+            },
+
+            formatMonthFull(monthStr) {
+                const months = {
+                    '01': 'Январь', '02': 'Февраль', '03': 'Март', '04': 'Апрель',
+                    '05': 'Май', '06': 'Июнь', '07': 'Июль', '08': 'Август',
+                    '09': 'Сентябрь', '10': 'Октябрь', '11': 'Ноябрь', '12': 'Декабрь'
+                };
+                const [year, month] = monthStr.split('-');
+                return `${months[month]} ${year}`;
+            },
+
+            formatLargeNumber(value) {
+                if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                if (value >= 1000) return (value / 1000).toFixed(1) + 'K';
+                return value;
+            },
+
+            // Экран "По целям"
+            renderGoalsScreen() {
+                const container = document.getElementById('goalsContent');
+                
+                if (!this.statsData || !this.statsData.goals) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-emoji">🎯</div>
+                            <div>У вас пока нет целей. Создайте первую!</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const goals = this.statsData.goals;
+                const chartId = 'pieChartGoals';
+
+                container.innerHTML = `
+                    <!-- Круговая диаграмма -->
+                    <div class="chart-container">
+                        <div class="chart-wrapper">
+                            <canvas id="${chartId}"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Метрики целей -->
+                    <div class="stats-metrics-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px;">
+                        <div class="metric-card">
+                            <div class="metric-title">Достигнуто</div>
+                            <div class="metric-value" style="font-size: 24px;">${goals.achieved}</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-title">В процессе</div>
+                            <div class="metric-value" style="font-size: 24px;">${goals.inProgress}</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-title">Средний прогресс</div>
+                            <div class="metric-value" style="font-size: 24px;">${goals.averageProgress}%</div>
+                        </div>
+                    </div>
+
+                    <!-- Топ-3 цели -->
+                    <div style="margin-top: 24px;">
+                        <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text-secondary);">Топ-3 цели</h3>
+                        ${goals.top3.map(goal => {
+                            const progressColor = goal.progress >= 100 ? '#4CAF50' : 
+                                                 goal.progress >= 75 ? 'linear-gradient(90deg, #FFC107, #4CAF50)' : 
+                                                 'linear-gradient(90deg, #007AFF, #00C7BE)';
+                            
+                            return `
+                                <div class="metric-card" style="margin-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                        <span style="font-size: 32px;">${goal.emoji}</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-size: 16px; font-weight: 600;">${goal.name}</div>
+                                            <div style="font-size: 12px; color: var(--text-secondary);">${goal.percentOfTotal}% от общих накоплений</div>
+                                        </div>
+                                        ${goal.progress >= 100 ? '<span style="font-size: 24px;">✅</span>' : ''}
+                                    </div>
+                                    <div style="background: rgba(120, 120, 128, 0.12); height: 8px; border-radius: 4px; overflow: hidden;">
+                                        <div style="height: 100%; width: ${Math.min(goal.progress, 100)}%; background: ${progressColor}; transition: width 0.6s ease;"></div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--text-secondary);">
+                                        <span>${formatNumber(goal.saved)} ₽ / ${formatNumber(goal.target)} ₽</span>
+                                        <span>${goal.progress.toFixed(1)}%</span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+
+                // Рендерим pie chart
+                setTimeout(() => {
+                    const ctx = document.getElementById(chartId);
+                    if (!ctx) return;
+
+                    if (this.charts[chartId]) {
+                        this.charts[chartId].destroy();
+                    }
+
+                    const colors = ['#007AFF', '#4CAF50', '#FF9500', '#9C27B0', '#F44336'];
+
+                    this.charts[chartId] = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: goals.distribution.map(d => d.emoji + ' ' + d.name),
+                            datasets: [{
+                                data: goals.distribution.map(d => d.value),
+                                backgroundColor: colors.slice(0, goals.distribution.length),
+                                borderWidth: 2,
+                                borderColor: '#1A1D2E'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 15,
+                                        font: { size: 12 },
+                                        color: '#fff'
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => {
+                                            const label = context.label || '';
+                                            const value = formatNumber(context.parsed) + ' ₽';
+                                            const percent = goals.distribution[context.dataIndex].percent + '%';
+                                            return `${label}: ${value} (${percent})`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }, 100);
+            },
+
+            // Экран "Транзакции"
+            renderTransactionsScreen() {
+                const container = document.getElementById('transactionsContent');
+                
+                if (!this.statsData || !this.statsData.transactions) {
+                    container.innerHTML = '<div class="error-card"><div class="error-message">Нет данных о транзакциях</div></div>';
+                    return;
+                }
+
+                const txData = this.statsData.transactions;
+
+                container.innerHTML = `
+                    <!-- Метрики транзакций -->
+                    <div class="stats-metrics-grid" style="grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;">
+                        <div class="metric-card">
+                            <div class="metric-title">Частота</div>
+                            <div class="metric-value" style="font-size: 20px;">${txData.avgPerMonth.toFixed(1)}</div>
+                            <div class="metric-subtitle">транзакций/мес</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-title">Самый активный</div>
+                            <div class="metric-value" style="font-size: 16px;">${this.formatMonthFull(txData.mostActiveMonth)}</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-icon">🔥</span>
+                                <span class="metric-title">Макс. транзакция</span>
+                            </div>
+                            <div class="metric-value" style="font-size: 20px;">${formatNumber(txData.largest)} ₽</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-icon">💧</span>
+                                <span class="metric-title">Мин. транзакция</span>
+                            </div>
+                            <div class="metric-value" style="font-size: 20px;">${formatNumber(txData.smallest)} ₽</div>
+                        </div>
+                    </div>
+
+                    ${txData.cancelled.count > 0 ? `
+                        <div style="background: rgba(244, 67, 54, 0.1); border: 1px solid rgba(244, 67, 54, 0.3); border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 32px;">⚠️</span>
+                                <div>
+                                    <div style="font-size: 16px; font-weight: 600;">Отменено транзакций: ${txData.cancelled.count}</div>
+                                    <div style="font-size: 14px; color: var(--text-secondary);">На сумму ${formatNumber(txData.cancelled.amount)} ₽</div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Последние транзакции -->
+                    <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text-secondary);">Недавние транзакции</h3>
+                    ${txData.recentTransactions.map(tx => {
+                        const date = new Date(tx.date);
+                        return `
+                            <div class="metric-card" style="margin-bottom: 10px; padding: 14px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-size: 14px; color: var(--text-secondary);">
+                                            ${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                        </div>
+                                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+                                            ${this.formatMonthFull(tx.month)}
+                                        </div>
+                                    </div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #4CAF50;">
+                                        +${formatNumber(tx.amount)} ₽
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                `;
+            },
+
+            // Экран "Прогнозы"
+            renderForecastsScreen() {
+                const container = document.getElementById('forecastsContent');
+                
+                if (!this.statsData || !this.statsData.forecast) {
+                    container.innerHTML = '<div class="error-card"><div class="error-message">Нет данных для прогноза</div></div>';
+                    return;
+                }
+
+                const forecast = this.statsData.forecast;
+                const chartId = 'forecastChart';
+
+                container.innerHTML = `
+                    <!-- Прогнозы накоплений -->
+                    <div class="stats-metrics-grid" style="grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
+                        <div class="metric-card">
+                            <div class="metric-title">Через 6 месяцев</div>
+                            <div class="metric-value" style="font-size: 20px;">${formatNumber(forecast.in6Months)} ₽</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-title">Через 12 месяцев</div>
+                            <div class="metric-value" style="font-size: 20px;">${formatNumber(forecast.in12Months)} ₽</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; font-size: 12px; color: var(--text-secondary); margin-bottom: 20px;">
+                        При текущем темпе ~${formatNumber(forecast.avgMonthlyGrowth)} ₽/мес
+                    </div>
+
+                    <!-- График прогноза -->
+                    <div class="chart-container">
+                        <div class="chart-wrapper">
+                            <canvas id="${chartId}"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Ближайшие цели -->
+                    <h3 style="font-size: 16px; margin: 24px 0 12px; color: var(--text-secondary);">Ближайшие цели</h3>
+                    ${forecast.goalCompletions && forecast.goalCompletions.length > 0 ? 
+                        forecast.goalCompletions.map(goal => `
+                            <div class="metric-card" style="margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                    <span style="font-size: 28px;">${goal.emoji}</span>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 16px; font-weight: 600;">${goal.name}</div>
+                                        <div style="font-size: 12px; color: var(--text-secondary);">
+                                            Осталось накопить: ${formatNumber(goal.remaining)} ₽
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
+                                    📅 Ожидаемая дата: ${new Date(goal.estimatedDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                    (через ${goal.monthsLeft} мес.)
+                                </div>
+                                <div style="background: rgba(120, 120, 128, 0.12); height: 6px; border-radius: 3px; overflow: hidden;">
+                                    <div style="height: 100%; width: ${goal.progress || 0}%; background: linear-gradient(90deg, #007AFF, #00C7BE); transition: width 0.6s ease;"></div>
+                                </div>
+                            </div>
+                        `).join('')
+                    : `
+                        <div class="metric-card" style="text-align: center; padding: 32px;">
+                            <div style="font-size: 48px; margin-bottom: 12px;">🎉</div>
+                            <div style="font-size: 16px; font-weight: 600;">Все цели достигнуты!</div>
+                        </div>
+                    `}
+                `;
+
+                // График прогноза
+                setTimeout(() => {
+                    const ctx = document.getElementById(chartId);
+                    if (!ctx) return;
+
+                    if (this.charts[chartId]) {
+                        this.charts[chartId].destroy();
+                    }
+
+                    const currentSaved = this.statsData.summary.totalSaved;
+                    const labels = ['Сейчас', '+6 мес', '+12 мес'];
+                    const values = [currentSaved, forecast.in6Months, forecast.in12Months];
+
+                    this.charts[chartId] = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Накопления (₽)',
+                                data: values,
+                                borderColor: 'rgba(0, 122, 255, 1)',
+                                backgroundColor: 'rgba(0, 122, 255, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 6,
+                                pointHoverRadius: 8,
+                                segment: {
+                                    borderDash: (ctx) => ctx.p1DataIndex > 0 ? [5, 5] : []
+                                }
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => formatNumber(context.parsed.y) + ' ₽'
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: (value) => this.formatLargeNumber(value)
+                                    },
+                                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                                },
+                                x: {
+                                    grid: { display: false }
+                                }
+                            }
+                        }
+                    });
+                }, 100);
+            },
+
+            // Экран "Достижения"
+            renderAchievementsScreen() {
+                const container = document.getElementById('achievementsContent');
+                
+                if (!this.statsData || !this.statsData.achievements) {
+                    container.innerHTML = '<div class="error-card"><div class="error-message">Нет данных о достижениях</div></div>';
+                    return;
+                }
+
+                const achievements = this.statsData.achievements;
+                const unlockedCount = achievements.filter(a => a.unlocked).length;
+                const totalCount = achievements.length;
+
+                container.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 24px; padding: 16px; background: var(--input-bg); border-radius: 12px;">
+                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">Разблокировано</div>
+                        <div style="font-size: 32px; font-weight: 700;">${unlockedCount} из ${totalCount}</div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                        ${achievements.map(ach => `
+                            <div class="metric-card" 
+                                 style="text-align: center; padding: 20px; ${ach.unlocked ? 'cursor: pointer;' : 'opacity: 0.4; filter: grayscale(1);'}"
+                                 ${ach.unlocked ? `onclick="celebrateAchievement('${ach.emoji}', '${ach.title}')"` : ''}>
+                                <div style="font-size: 48px; margin-bottom: 12px;">${ach.emoji}</div>
+                                <div style="font-size: 14px; font-weight: 600; margin-bottom: 6px;">${ach.title}</div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">${ach.description}</div>
+                                ${ach.unlocked && ach.date ? `
+                                    <div style="font-size: 11px; color: var(--text-secondary);">
+                                        ${new Date(ach.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            },
+
+            
+
+            // Переключение периодов
+            switchPeriod(period) {
+                haptic('light');
+                this.currentPeriod = period;
+                
+                // Обновляем активный таб
+                document.querySelectorAll('.period-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelector(`[data-period="${period}"]`).classList.add('active');
+                
+                // Перерендериваем контент
+                this.renderPeriodsScreen();
+            },
+
+            // Вспомогательные методы
+            getChangeClass(change) {
+                if (change > 5) return 'positive';
+                if (change < -5) return 'negative';
+                return 'neutral';
+            },
+
+            getChangeIcon(change) {
+                if (change > 5) return '📈';
+                if (change < -5) return '🔻';
+                return '➡️';
+            },
+
+            getTrendClass(trend) {
+                if (trend === 'up') return 'positive';
+                if (trend === 'down') return 'negative';
+                return 'neutral';
+            },
+
+            getTrendIcon(trend) {
+                if (trend === 'up') return '↗️';
+                if (trend === 'down') return '↘️';
+                return '→';
+            },
+
+            getTrendText(trend) {
+                if (trend === 'up') return 'растет';
+                if (trend === 'down') return 'падает';
+                return 'стабильно';
+            },
+
+            showError(message) {
+                const container = document.getElementById('statsContent');
+                container.innerHTML = `
+                    <div class="error-card">
+                        <div class="error-icon">❌</div>
+                        <div class="error-message">${message}</div>
+                        <button class="retry-button" onclick="StatsModule.init()">Повторить попытку</button>
+                    </div>
+                `;
             }
+        };
+
+        // ====== STATISTICS ======
+        async function renderStats() {
+            await StatsModule.init();
+            
+            // Настройка pull-to-refresh для главного экрана статистики
+            setTimeout(() => {
+                const statsMainScreen = document.getElementById('statsMainScreen');
+                setupPullToRefresh(statsMainScreen, async () => {
+                    await StatsModule.loadStatsData();
+                    StatsModule.renderMainScreen();
+                });
+            }, 300);
+        }
+
+        // ====== PULL-TO-REFRESH ======
+        let pullToRefreshState = {
+            startY: 0,
+            currentY: 0,
+            isDragging: false,
+            isRefreshing: false
+        };
+
+        function setupPullToRefresh(screenElement, refreshCallback) {
+            if (!screenElement) return;
+
+            screenElement.addEventListener('touchstart', (e) => {
+                if (screenElement.scrollTop === 0 && !pullToRefreshState.isRefreshing) {
+                    pullToRefreshState.startY = e.touches[0].clientY;
+                    pullToRefreshState.isDragging = true;
+                }
+            });
+
+            screenElement.addEventListener('touchmove', (e) => {
+                if (!pullToRefreshState.isDragging || pullToRefreshState.isRefreshing) return;
+
+                pullToRefreshState.currentY = e.touches[0].clientY;
+                const pullDistance = pullToRefreshState.currentY - pullToRefreshState.startY;
+
+                if (pullDistance > 0 && pullDistance < 150) {
+                    e.preventDefault();
+                }
+            });
+
+            screenElement.addEventListener('touchend', async () => {
+                if (!pullToRefreshState.isDragging || pullToRefreshState.isRefreshing) {
+                    pullToRefreshState.isDragging = false;
+                    return;
+                }
+
+                const pullDistance = pullToRefreshState.currentY - pullToRefreshState.startY;
+                
+                if (pullDistance > 100) {
+                    pullToRefreshState.isRefreshing = true;
+                    haptic('medium');
+                    
+                    try {
+                        await refreshCallback();
+                        haptic('success');
+                        showToast('✅ Обновлено');
+                    } catch (error) {
+                        haptic('error');
+                        showToast('❌ Ошибка обновления');
+                    } finally {
+                        pullToRefreshState.isRefreshing = false;
+                    }
+                }
+                
+                pullToRefreshState.isDragging = false;
+                pullToRefreshState.startY = 0;
+                pullToRefreshState.currentY = 0;
+            });
         }
 
         // ====== SETTINGS ======
@@ -2837,6 +4285,13 @@
                 `;
 
                 state.settings.loaded = true;
+                
+                // Настройка pull-to-refresh для экрана настроек
+                setTimeout(() => {
+                    setupPullToRefresh(container, async () => {
+                        await renderSettings();
+                    });
+                }, 300);
 
             } catch (error) {
                 container.innerHTML = `<div class="error">Ошибка загрузки настроек: ${error.message}</div>`;
