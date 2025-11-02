@@ -564,8 +564,7 @@
             width: 100%;
             letter-spacing: -0.4px;
             position: relative;
-            min-height: 52px;
-            height: 52px;
+            height: 52px; /* Фиксированная высота предотвращает расширение */
         }
 
         .btn.loading {
@@ -880,7 +879,7 @@
         .history-actions .btn {
             font-size: 13px;
             padding: 8px 14px;
-            min-height: auto;
+            height: 36px; /* Фиксированная высота для кнопок в истории */
             background: rgba(120, 120, 128, 0.08);
             color: var(--text-primary);
             box-shadow: none;
@@ -1193,7 +1192,7 @@
         /* Фиксируем размеры для всех кнопок в истории */
         .history-actions .btn {
             min-width: 100px;
-            width: 100%;
+            flex: 1;
         }
 
         /* Debug Panel */
@@ -1740,18 +1739,22 @@
                         <div class="nav-arrow-stats">→</div>
                     </div>
                     <div class="stats-nav-card" data-action="navigate-stats" data-screen="goals">
+                        <div class="nav-icon-stats">🎯</div>
                         <div class="nav-title-stats">По целям</div>
                         <div class="nav-arrow-stats">→</div>
                     </div>
                     <div class="stats-nav-card" data-action="navigate-stats" data-screen="transactions">
+                        <div class="nav-icon-stats">📊</div>
                         <div class="nav-title-stats">Транзакции</div>
                         <div class="nav-arrow-stats">→</div>
                     </div>
                     <div class="stats-nav-card" data-action="navigate-stats" data-screen="forecasts">
+                        <div class="nav-icon-stats">🔮</div>
                         <div class="nav-title-stats">Прогнозы</div>
                         <div class="nav-arrow-stats">→</div>
                     </div>
                     <div class="stats-nav-card" data-action="navigate-stats" data-screen="achievements">
+                        <div class="nav-icon-stats">🏆</div>
                         <div class="nav-title-stats">Достижения</div>
                         <div class="nav-arrow-stats">→</div>
                     </div>
@@ -3458,7 +3461,9 @@
             `;
 
             try {
+                console.log('📜 renderHistory() начата');
                 await loadHistory();
+                console.log('📥 История загружена, элементов:', state.history.length);
 
                 if (state.history.length === 0) {
                     container.innerHTML = `
@@ -3470,6 +3475,7 @@
                     return;
                 }
 
+                console.log('🔨 Начинаем построение HTML для истории');
                 const historyHtml = state.history.map((item, index) => {
                     const date = new Date(item.date);
                     
@@ -3492,45 +3498,74 @@
                         </div>
                     ` : '';
                     
-                    // Разбивка по целям из distributed (новый формат бэкенда - массив объектов)
+                    // ИСПРАВЛЕНИЕ: Разбивка по целям - поддержка ЛЮБОГО формата
                     let distributionHtml = '';
-                    if (item.distributed && Array.isArray(item.distributed) && item.distributed.length > 0) {
-                        // Считаем распределенную сумму
-                        const distributedTotal = item.distributed.reduce((sum, dist) => sum + (dist.amount || 0), 0);
-                        const freeAmount = item.amount - distributedTotal;
+                    
+                    if (item.distributed) {
+                        let distributionItems = '';
+                        let distributedTotal = 0;
                         
-                        const distributionItems = item.distributed
-                            .map(dist => {
-                                return `
+                        // Формат 1: Массив объектов [{goal_name, emoji, amount}, ...]
+                        if (Array.isArray(item.distributed) && item.distributed.length > 0) {
+                            distributedTotal = item.distributed.reduce((sum, dist) => sum + (dist.amount || 0), 0);
+                            
+                            distributionItems = item.distributed
+                                .map(dist => `
                                     <div class="history-distribution-item">
                                         <div class="history-distribution-label">
-                                            <span class="history-distribution-emoji">${dist.emoji}</span>
-                                            <span>${dist.goal_name}</span>
+                                            <span class="history-distribution-emoji">${dist.emoji || '🎯'}</span>
+                                            <span>${dist.goal_name || dist.name || 'Цель'}</span>
                                         </div>
                                         <div class="history-distribution-amount">${formatNumber(dist.amount)} ₽</div>
                                     </div>
-                                `;
-                            })
-                            .join('');
+                                `)
+                                .join('');
+                        }
+                        // Формат 2: Объект {goalId: amount, ...}
+                        else if (typeof item.distributed === 'object' && !Array.isArray(item.distributed)) {
+                            const goalIds = Object.keys(item.distributed);
+                            if (goalIds.length > 0) {
+                                distributedTotal = Object.values(item.distributed).reduce((sum, amount) => sum + amount, 0);
+                                
+                                distributionItems = goalIds
+                                    .map(goalId => {
+                                        const amount = item.distributed[goalId];
+                                        const goal = state.goals.find(g => g.id == goalId);
+                                        return `
+                                            <div class="history-distribution-item">
+                                                <div class="history-distribution-label">
+                                                    <span class="history-distribution-emoji">${goal?.emoji || '🎯'}</span>
+                                                    <span>${goal?.goal_name || `Цель #${goalId}`}</span>
+                                                </div>
+                                                <div class="history-distribution-amount">${formatNumber(amount)} ₽</div>
+                                            </div>
+                                        `;
+                                    })
+                                    .join('');
+                            }
+                        }
                         
-                        // Добавляем свободные средства если есть остаток
-                        const freeAmountHtml = freeAmount > 0 ? `
-                            <div class="history-distribution-item">
-                                <div class="history-distribution-label">
-                                    <span class="history-distribution-emoji">💸</span>
-                                    <span>Свободные</span>
+                        // Если есть распределение - формируем HTML
+                        if (distributionItems) {
+                            const freeAmount = item.amount - distributedTotal;
+                            const freeAmountHtml = freeAmount > 0 ? `
+                                <div class="history-distribution-item">
+                                    <div class="history-distribution-label">
+                                        <span class="history-distribution-emoji">💸</span>
+                                        <span>Свободные</span>
+                                    </div>
+                                    <div class="history-distribution-amount">${formatNumber(freeAmount)} ₽</div>
                                 </div>
-                                <div class="history-distribution-amount">${formatNumber(freeAmount)} ₽</div>
-                            </div>
-                        ` : '';
-                        
-                        distributionHtml = `
-                            <div class="history-distribution">
-                                <div class="history-distribution-title">📊 Распределение</div>
-                                ${distributionItems}
-                                ${freeAmountHtml}
-                            </div>
-                        `;
+                            ` : '';
+                            
+                            distributionHtml = `
+                                <div class="history-distribution">
+                                    <div class="history-distribution-title">📊 Распределение</div>
+                                    ${distributionItems}
+                                    ${freeAmountHtml}
+                                </div>
+                            `;
+                        }
                     }
                     
                     return `
@@ -3550,9 +3585,13 @@
                     `;
                 }).join('');
 
+                console.log('✅ HTML построен, длина:', historyHtml.length, 'символов');
+                console.log('🔄 Заменяем скелеты на реальный контент');
                 container.innerHTML = historyHtml;
+                console.log('✅ renderHistory() завершена успешно');
 
             } catch (error) {
+                console.error('❌ Ошибка в renderHistory():', error);
                 container.innerHTML = `<div class="error">Ошибка загрузки истории: ${error.message}</div>`;
             }
         }
@@ -4324,7 +4363,12 @@
             renderGoalsScreen() {
                 const container = document.getElementById('goalsContent');
                 
+                console.log('🎯 renderGoalsScreen вызван, statsData:', !!this.statsData);
+                console.log('🎯 goals:', this.statsData?.goals);
+                console.log('🎯 distribution:', this.statsData?.goals?.distribution);
+                
                 if (!this.statsData || !this.statsData.goals) {
+                    console.warn('⚠️ Нет statsData или goals');
                     container.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-emoji">🎯</div>
@@ -4336,16 +4380,27 @@
 
                 const goals = this.statsData.goals;
                 
-                // ИСПРАВЛЕНИЕ: Проверка на пустой массив distribution
-                if (!goals.distribution || goals.distribution.length === 0) {
+                // ИСПРАВЛЕНИЕ: Добавляем детальное логирование перед проверкой
+                console.log('🔍 Проверка distribution:', {
+                    exists: !!goals.distribution,
+                    isArray: Array.isArray(goals.distribution),
+                    length: goals.distribution?.length,
+                    data: goals.distribution
+                });
+                
+                // ФИКС: Проверяем наличие массива и наличие хотя бы одного элемента
+                if (!goals.distribution || !Array.isArray(goals.distribution) || goals.distribution.length === 0) {
+                    console.warn('⚠️ distribution пустой, не является массивом или отсутствует');
                     container.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-emoji">📊</div>
-                            <div>Нет данных для отображения распределения по целям</div>
+                            <div>Нет данных для отображения распределения по целям. Начните добавлять доходы!</div>
                         </div>
                     `;
                     return;
                 }
+                
+                console.log('✅ Продолжаем рендеринг с', goals.distribution.length, 'элементами');
                 
                 const chartId = 'pieChartGoals';
 
