@@ -2269,6 +2269,13 @@
                 let url = API_BASE;
                 let body = null;
                 
+                // 🔒 SECURITY: Получаем initData для валидации Telegram WebApp
+                const initData = tg.initData || '';
+                
+                if (!initData && tg.platform !== 'unknown') {
+                    console.warn('⚠️ SECURITY WARNING: Нет initData от Telegram!');
+                }
+                
                 // Backend expects: GET via ?path=..., POST/PUT/DELETE via body {path, method, ...}
                 if (method === 'GET') {
                     url += `?path=${encodeURIComponent(endpoint)}`;
@@ -2290,6 +2297,8 @@
                     method: method === 'GET' ? 'GET' : 'POST', // Always POST for mutations
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-Telegram-Init-Data': initData, // 🔒 Отправляем initData для валидации
+                        'X-User-Id': USER_ID, // Явная передача userId для дополнительной проверки
                         ...options.headers
                     },
                     body: body
