@@ -1182,13 +1182,8 @@
         }
         
         /* Unified loading button styles - prevents resizing during loading state */
-        .btn .btn-text {
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            display: flex;
+        .btn-text {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
@@ -1977,7 +1972,7 @@
             </div>
 
             <div class="modal-sticky-footer">
-                <button class="btn btn-primary" id="submitIncomeBtn" data-action="submit-income">
+                <button class="btn" id="submitIncomeBtn" data-action="submit-income" style="background: #007AFF; color: #FFFFFF; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);">
                     <span class="btn-text">Добавить доход</span>
                     <span class="btn-spinner"></span>
                 </button>
@@ -3685,7 +3680,8 @@
                             ${distributionHtml}
                             <div class="history-actions">
                                 <button class="btn" data-action="undo-income" data-transaction-id="${item.transaction_id}" data-amount="${item.amount}" data-date="${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}">
-                                    Отменить
+                                    <span class="btn-text">Отменить</span>
+                                    <span class="btn-spinner"></span>
                                 </button>
                             </div>
                         </div>
