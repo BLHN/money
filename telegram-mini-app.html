@@ -893,6 +893,13 @@
             font-weight: 500;
         }
         
+        /* Фиксированная высота для кнопки добавления дохода в sticky footer */
+        .modal-sticky-footer .btn {
+            height: 52px !important;
+            min-height: 52px !important;
+            max-height: 52px !important;
+        }
+        
         .history-actions .btn:active {
             background: rgba(120, 120, 128, 0.16);
         }
@@ -1176,11 +1183,17 @@
         
         /* Unified loading button styles - prevents resizing during loading state */
         .btn .btn-text {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
             line-height: 1;
+            transition: opacity 0.15s ease;
         }
         
         /* Кнопки в модалке подтверждения отмены - ИСПРАВЛЕНО */
