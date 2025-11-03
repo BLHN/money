@@ -2904,10 +2904,10 @@
             `).join('');
         }
 
-        function selectDescription(event, label) {
+        function selectDescription(target, label) {
             haptic('light');
             document.querySelectorAll('.description-option').forEach(el => el.classList.remove('selected'));
-            event.currentTarget.classList.add('selected');
+            target.classList.add('selected');
             // Очищаем кастомный текст при выборе опции
             document.getElementById('incomeDescriptionCustom').value = '';
         }
@@ -5124,7 +5124,7 @@
                     
                 // Выбор эмодзи и описаний
                 case 'select-description':
-                    selectDescription(e, target.dataset.label);
+                    selectDescription(target, target.dataset.label);
                     break;
                 case 'select-emoji':
                     selectEmoji(target.dataset.emoji);
