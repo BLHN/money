@@ -3285,32 +3285,43 @@
             const btn = document.getElementById('submitIncomeBtn');
             
             // 🐛 ДИАГНОСТИКА: Логируем высоту ДО добавления класса loading
+            const btnText = btn.querySelector('.btn-text');
+            const btnSpinner = btn.querySelector('.btn-spinner');
+            
             console.log('🐛 BEFORE loading:', {
-                height: window.getComputedStyle(btn).height,
-                minHeight: window.getComputedStyle(btn).minHeight,
-                maxHeight: window.getComputedStyle(btn).maxHeight,
+                offsetHeight: btn.offsetHeight,
+                clientHeight: btn.clientHeight,
+                scrollHeight: btn.scrollHeight,
+                computedHeight: window.getComputedStyle(btn).height,
                 lineHeight: window.getComputedStyle(btn).lineHeight,
-                padding: window.getComputedStyle(btn).padding,
-                gap: window.getComputedStyle(btn).gap,
-                display: window.getComputedStyle(btn).display,
-                alignItems: window.getComputedStyle(btn).alignItems
+                btnTextHeight: btnText.offsetHeight,
+                btnTextLineHeight: window.getComputedStyle(btnText).lineHeight,
+                btnTextOpacity: window.getComputedStyle(btnText).opacity,
+                spinnerHeight: btnSpinner.offsetHeight,
+                spinnerDisplay: window.getComputedStyle(btnSpinner).display,
+                boundingRect: btn.getBoundingClientRect().height
             });
             
             btn.classList.add('loading');
             btn.disabled = true;
             
+            // Даём браузеру время на reflow
+            await new Promise(resolve => requestAnimationFrame(resolve));
+            
             // 🐛 ДИАГНОСТИКА: Логируем высоту ПОСЛЕ добавления класса loading
             console.log('🐛 AFTER loading:', {
-                height: window.getComputedStyle(btn).height,
-                minHeight: window.getComputedStyle(btn).minHeight,
-                maxHeight: window.getComputedStyle(btn).maxHeight,
+                offsetHeight: btn.offsetHeight,
+                clientHeight: btn.clientHeight,
+                scrollHeight: btn.scrollHeight,
+                computedHeight: window.getComputedStyle(btn).height,
                 lineHeight: window.getComputedStyle(btn).lineHeight,
-                padding: window.getComputedStyle(btn).padding,
-                gap: window.getComputedStyle(btn).gap,
-                display: window.getComputedStyle(btn).display,
-                alignItems: window.getComputedStyle(btn).alignItems,
-                btnTextDisplay: window.getComputedStyle(btn.querySelector('.btn-text')).display,
-                spinnerDisplay: window.getComputedStyle(btn.querySelector('.btn-spinner')).display
+                btnTextHeight: btnText.offsetHeight,
+                btnTextLineHeight: window.getComputedStyle(btnText).lineHeight,
+                btnTextOpacity: window.getComputedStyle(btnText).opacity,
+                btnTextVisibility: window.getComputedStyle(btnText).visibility,
+                spinnerHeight: btnSpinner.offsetHeight,
+                spinnerDisplay: window.getComputedStyle(btnSpinner).display,
+                boundingRect: btn.getBoundingClientRect().height
             });
 
             try {
