@@ -564,7 +564,8 @@
             width: 100%;
             letter-spacing: -0.4px;
             position: relative;
-            height: 52px; /* Фиксированная высота предотвращает расширение */
+            min-height: 52px; /* min-height вместо height для предотвращения расширения */
+            height: 52px; /* Явная высота для стабильности */
         }
 
         .btn.loading {
@@ -580,13 +581,14 @@
             position: absolute;
             left: 50%;
             top: 50%;
-            transform: translate(-50%, -50%);
+            margin-left: -10px; /* Центрирование без transform */
+            margin-top: -10px; /* Центрирование без transform */
             width: 20px;
             height: 20px;
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-top-color: white;
             border-radius: 50%;
-            animation: spin 0.6s linear infinite;
+            animation: btnSpinner 0.6s linear infinite;
             display: none;
         }
 
@@ -909,6 +911,11 @@
         }
 
         @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes btnSpinner {
+            from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
 
