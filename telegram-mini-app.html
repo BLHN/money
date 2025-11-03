@@ -3838,10 +3838,53 @@
                 // Рендерим 4 карточки метрик
                 this.renderMetricCards(data.summary);
                 
+                // Восстанавливаем кнопки навигации (они были заменены скелетами)
+                this.restoreNavigationMenu();
+                
                 // Рендерим инсайты
                 this.renderInsights(data.insights);
                 
                 console.log('✅ Главный экран отрендерен успешно');
+            },
+            
+            // Восстановление кнопок навигации после скелетов
+            restoreNavigationMenu() {
+                const navigationMenu = document.querySelector('.stats-navigation-menu');
+                if (!navigationMenu) {
+                    console.warn('⚠️ navigationMenu не найден');
+                    return;
+                }
+                
+                // Восстанавливаем оригинальный HTML кнопок навигации
+                navigationMenu.innerHTML = `
+                    <div class="stats-nav-card" data-action="navigate-stats" data-screen="periods">
+                        <div class="nav-icon-stats">📅</div>
+                        <div class="nav-title-stats">По периодам</div>
+                        <div class="nav-arrow-stats">→</div>
+                    </div>
+                    <div class="stats-nav-card" data-action="navigate-stats" data-screen="goals">
+                        <div class="nav-icon-stats">🎯</div>
+                        <div class="nav-title-stats">По целям</div>
+                        <div class="nav-arrow-stats">→</div>
+                    </div>
+                    <div class="stats-nav-card" data-action="navigate-stats" data-screen="transactions">
+                        <div class="nav-icon-stats">📊</div>
+                        <div class="nav-title-stats">Транзакции</div>
+                        <div class="nav-arrow-stats">→</div>
+                    </div>
+                    <div class="stats-nav-card" data-action="navigate-stats" data-screen="forecasts">
+                        <div class="nav-icon-stats">🔮</div>
+                        <div class="nav-title-stats">Прогнозы</div>
+                        <div class="nav-arrow-stats">→</div>
+                    </div>
+                    <div class="stats-nav-card" data-action="navigate-stats" data-screen="achievements">
+                        <div class="nav-icon-stats">🏆</div>
+                        <div class="nav-title-stats">Достижения</div>
+                        <div class="nav-arrow-stats">→</div>
+                    </div>
+                `;
+                
+                console.log('✅ Кнопки навигации восстановлены');
             },
 
             // Функции для определения стиля изменений
