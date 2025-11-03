@@ -3258,30 +3258,17 @@
         async function submitIncome() {
             console.log('💰 submitIncome вызван');
             
-            const submitBtn = document.querySelector('#addIncomeModal .submit-btn');
-            console.log('🔍 Кнопка submit найдена:', submitBtn);
-            console.log('🔍 Текущая высота кнопки:', submitBtn ? window.getComputedStyle(submitBtn).height : 'не найдена');
-            
             const amount = parseFloat(document.getElementById('incomeAmount').value);
             const customInput = document.getElementById('incomeDescriptionCustom').value.trim();
-            
-            console.log('🔍 amount:', amount);
-            console.log('🔍 customInput:', customInput);
             
             // Определяем итоговое описание: сначала проверяем выбранную опцию, потом кастомный текст
             let description = null;
             const selectedOption = document.querySelector('.description-option.selected');
-            console.log('🔍 selectedOption найдена:', !!selectedOption);
-            console.log('🔍 selectedOption.dataset.value:', selectedOption ? selectedOption.dataset.value : 'не найдено');
             
             if (selectedOption) {
                 description = selectedOption.dataset.value;
-                console.log('✅ Используем описание из кнопки:', description);
             } else if (customInput) {
                 description = customInput;
-                console.log('✅ Используем кастомное описание:', description);
-            } else {
-                console.log('⚠️ Описание не выбрано');
             }
             
             if (!amount || amount <= 0) {
@@ -3294,8 +3281,35 @@
 
             // Показываем индикатор загрузки
             const btn = document.getElementById('submitIncomeBtn');
+            
+            // 🐛 ДИАГНОСТИКА: Логируем высоту ДО добавления класса loading
+            console.log('🐛 BEFORE loading:', {
+                height: window.getComputedStyle(btn).height,
+                minHeight: window.getComputedStyle(btn).minHeight,
+                maxHeight: window.getComputedStyle(btn).maxHeight,
+                lineHeight: window.getComputedStyle(btn).lineHeight,
+                padding: window.getComputedStyle(btn).padding,
+                gap: window.getComputedStyle(btn).gap,
+                display: window.getComputedStyle(btn).display,
+                alignItems: window.getComputedStyle(btn).alignItems
+            });
+            
             btn.classList.add('loading');
             btn.disabled = true;
+            
+            // 🐛 ДИАГНОСТИКА: Логируем высоту ПОСЛЕ добавления класса loading
+            console.log('🐛 AFTER loading:', {
+                height: window.getComputedStyle(btn).height,
+                minHeight: window.getComputedStyle(btn).minHeight,
+                maxHeight: window.getComputedStyle(btn).maxHeight,
+                lineHeight: window.getComputedStyle(btn).lineHeight,
+                padding: window.getComputedStyle(btn).padding,
+                gap: window.getComputedStyle(btn).gap,
+                display: window.getComputedStyle(btn).display,
+                alignItems: window.getComputedStyle(btn).alignItems,
+                btnTextDisplay: window.getComputedStyle(btn.querySelector('.btn-text')).display,
+                spinnerDisplay: window.getComputedStyle(btn.querySelector('.btn-spinner')).display
+            });
 
             try {
                 await addIncome(amount, description);
