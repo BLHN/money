@@ -555,6 +555,7 @@
             border-radius: 14px;
             font-size: 17px;
             font-weight: 600;
+            line-height: 52px;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
             display: flex;
@@ -564,8 +565,10 @@
             width: 100%;
             letter-spacing: -0.4px;
             position: relative;
-            min-height: 52px; /* min-height вместо height для предотвращения расширения */
-            height: 52px; /* Явная высота для стабильности */
+            min-height: 52px !important;
+            max-height: 52px !important;
+            height: 52px !important;
+            overflow: hidden;
         }
 
         .btn.loading {
@@ -574,7 +577,7 @@
         }
 
         .btn.loading .btn-text {
-            visibility: hidden;
+            opacity: 0; /* ИЗМЕНЕНО: используем opacity вместо visibility */
         }
 
         .btn-spinner {
@@ -2900,7 +2903,15 @@
         ];
 
         function renderDescriptionPicker() {
+            console.log('🎨 renderDescriptionPicker вызван');
             const container = document.getElementById('descriptionPicker');
+            
+            if (!container) {
+                console.error('❌ Контейнер descriptionPicker не найден!');
+                return;
+            }
+            
+            console.log('🔍 Рендерим', defaultDescriptions.length, 'кнопок описания');
             
             // Эмодзи + подпись
             container.innerHTML = defaultDescriptions.map(desc => `
@@ -2909,14 +2920,38 @@
                     <span>${desc.label}</span>
                 </div>
             `).join('');
+            
+            console.log('✅ Кнопки отрендерены, HTML длина:', container.innerHTML.length);
         }
 
         function selectDescription(target, label) {
+            console.log('🎯 selectDescription вызван');
+            console.log('🔍 target:', target);
+            console.log('🔍 label:', label);
+            console.log('🔍 target.classList:', target.classList);
+            
             haptic('light');
-            document.querySelectorAll('.description-option').forEach(el => el.classList.remove('selected'));
+            
+            const allOptions = document.querySelectorAll('.description-option');
+            console.log('🔍 Найдено .description-option элементов:', allOptions.length);
+            
+            allOptions.forEach(el => {
+                console.log('🔍 Убираем selected у элемента:', el.dataset.label);
+                el.classList.remove('selected');
+            });
+            
+            console.log('✅ Добавляем selected к текущему элементу');
             target.classList.add('selected');
+            
             // Очищаем кастомный текст при выборе опции
-            document.getElementById('incomeDescriptionCustom').value = '';
+            const customInput = document.getElementById('incomeDescriptionCustom');
+            console.log('🔍 Кастомный input найден:', !!customInput);
+            if (customInput) {
+                customInput.value = '';
+                console.log('✅ Кастомный input очищен');
+            }
+            
+            console.log('✅ selectDescription завершена');
         }
 
         function showGoalModal(goalId = null) {
@@ -3221,16 +3256,32 @@
         });
 
         async function submitIncome() {
+            console.log('💰 submitIncome вызван');
+            
+            const submitBtn = document.querySelector('#addIncomeModal .submit-btn');
+            console.log('🔍 Кнопка submit найдена:', submitBtn);
+            console.log('🔍 Текущая высота кнопки:', submitBtn ? window.getComputedStyle(submitBtn).height : 'не найдена');
+            
             const amount = parseFloat(document.getElementById('incomeAmount').value);
             const customInput = document.getElementById('incomeDescriptionCustom').value.trim();
+            
+            console.log('🔍 amount:', amount);
+            console.log('🔍 customInput:', customInput);
             
             // Определяем итоговое описание: сначала проверяем выбранную опцию, потом кастомный текст
             let description = null;
             const selectedOption = document.querySelector('.description-option.selected');
+            console.log('🔍 selectedOption найдена:', !!selectedOption);
+            console.log('🔍 selectedOption.dataset.value:', selectedOption ? selectedOption.dataset.value : 'не найдено');
+            
             if (selectedOption) {
                 description = selectedOption.dataset.value;
+                console.log('✅ Используем описание из кнопки:', description);
             } else if (customInput) {
                 description = customInput;
+                console.log('✅ Используем кастомное описание:', description);
+            } else {
+                console.log('⚠️ Описание не выбрано');
             }
             
             if (!amount || amount <= 0) {
@@ -5131,6 +5182,9 @@
                     
                 // Выбор эмодзи и описаний
                 case 'select-description':
+                    console.log('🎬 Event delegation: select-description');
+                    console.log('🔍 target:', target);
+                    console.log('🔍 target.dataset:', target.dataset);
                     selectDescription(target, target.dataset.label);
                     break;
                 case 'select-emoji':
