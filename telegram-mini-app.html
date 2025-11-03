@@ -555,7 +555,7 @@
             border-radius: 14px;
             font-size: 17px;
             font-weight: 600;
-            line-height: 52px;
+            line-height: 1;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
             display: flex;
@@ -569,6 +569,7 @@
             max-height: 52px !important;
             height: 52px !important;
             overflow: hidden;
+            box-sizing: border-box;
         }
 
         .btn.loading {
@@ -1175,10 +1176,11 @@
         
         /* Unified loading button styles - prevents resizing during loading state */
         .btn .btn-text {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
+            line-height: 1;
         }
         
         /* Кнопки в модалке подтверждения отмены - ИСПРАВЛЕНО */
