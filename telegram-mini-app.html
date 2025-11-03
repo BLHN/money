@@ -4617,11 +4617,11 @@
                                         ${goal.progress >= 100 ? '<span style="font-size: 24px;">✅</span>' : ''}
                                     </div>
                                     <div style="background: rgba(120, 120, 128, 0.12); height: 8px; border-radius: 4px; overflow: hidden;">
-                                        <div style="height: 100%; width: ${Math.min(goal.progress, 100)}%; background: ${progressColor}; transition: width 0.6s ease;"></div>
+                                        <div style="height: 100%; width: ${Math.min((goal.progress !== null && goal.progress !== undefined) ? goal.progress : 0, 100)}%; background: ${progressColor}; transition: width 0.6s ease;"></div>
                                     </div>
                                     <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--text-secondary);">
-                                        <span>${formatNumber(goal.saved)} ₽ / ${formatNumber(goal.target)} ₽</span>
-                                        <span>${goal.progress.toFixed(1)}%</span>
+                                        <span>${formatNumber(goal.saved)} ₽ ${goal.target ? '/ ' + formatNumber(goal.target) + ' ₽' : ''}</span>
+                                        <span>${(goal.progress !== null && goal.progress !== undefined) ? goal.progress.toFixed(1) + '%' : 'Без цели'}</span>
                                     </div>
                                 </div>
                             `;
