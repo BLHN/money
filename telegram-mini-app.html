@@ -555,7 +555,7 @@
             border-radius: 14px;
             font-size: 17px;
             font-weight: 600;
-            line-height: 1;
+            line-height: 52px; /* ИСПРАВЛЕНО: фиксированная line-height равная высоте */
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
             display: flex;
@@ -570,23 +570,26 @@
             height: 52px !important;
             overflow: hidden;
             box-sizing: border-box;
+            flex-shrink: 0; /* ДОБАВЛЕНО: предотвращает сжатие */
         }
 
         .btn.loading {
             pointer-events: none;
             opacity: 0.7;
+            height: 52px !important; /* ДОБАВЛЕНО: явная высота при загрузке */
         }
 
         .btn.loading .btn-text {
-            opacity: 0; /* ИЗМЕНЕНО: используем opacity вместо visibility */
+            opacity: 0;
+            visibility: hidden; /* ДОБАВЛЕНО: двойная защита */
         }
 
         .btn-spinner {
             position: absolute;
             left: 50%;
             top: 50%;
-            margin-left: -10px; /* Центрирование без transform */
-            margin-top: -10px; /* Центрирование без transform */
+            margin-left: -10px;
+            margin-top: -10px;
             width: 20px;
             height: 20px;
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -1187,8 +1190,9 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            line-height: 1;
+            line-height: 52px; /* ИСПРАВЛЕНО: фиксированная высота */
             transition: opacity 0.15s ease;
+            height: 52px; /* ДОБАВЛЕНО: явная высота */
         }
         
         /* Кнопки в модалке подтверждения отмены - ИСПРАВЛЕНО */
@@ -1972,7 +1976,7 @@
             </div>
 
             <div class="modal-sticky-footer">
-                <button class="btn" id="submitIncomeBtn" data-action="submit-income" style="background: #007AFF; color: #FFFFFF; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);">
+                <button class="btn" id="submitIncomeBtn" data-action="submit-income" style="background: #007AFF; color: #FFFFFF; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25); height: 52px; min-height: 52px; max-height: 52px; font-size: 17px; font-weight: 600; padding: 0 16px;">
                     <span class="btn-text">Добавить доход</span>
                     <span class="btn-spinner"></span>
                 </button>
@@ -4509,9 +4513,10 @@
             renderGoalsScreen() {
                 const container = document.getElementById('goalsContent');
                 
-                console.log('🎯 renderGoalsScreen вызван, statsData:', !!this.statsData);
-                console.log('🎯 goals:', this.statsData?.goals);
-                console.log('🎯 distribution:', this.statsData?.goals?.distribution);
+                console.log('🎯 renderGoalsScreen вызван');
+                console.log('🎯 statsData существует:', !!this.statsData);
+                console.log('🎯 statsData.goals существует:', !!(this.statsData && this.statsData.goals));
+                console.log('🎯 Полная структура statsData.goals:', JSON.stringify(this.statsData?.goals, null, 2));
                 
                 if (!this.statsData || !this.statsData.goals) {
                     console.warn('⚠️ Нет statsData или goals');
@@ -4534,13 +4539,32 @@
                     data: goals.distribution
                 });
                 
+                // ДИАГНОСТИКА: Проверяем почему не грузятся данные
+                if (!goals.distribution) {
+                    console.error('❌ goals.distribution отсутствует');
+                    console.log('🔍 Доступные ключи в goals:', Object.keys(goals));
+                    console.log('🔍 Полная структура goals:', JSON.stringify(goals, null, 2));
+                }
+                
+                if (!Array.isArray(goals.distribution)) {
+                    console.error('❌ goals.distribution не массив, тип:', typeof goals.distribution);
+                    console.log('🔍 Содержимое goals.distribution:', goals.distribution);
+                }
+                
+                if (goals.distribution && Array.isArray(goals.distribution) && goals.distribution.length === 0) {
+                    console.warn('⚠️ goals.distribution пустой массив (length=0)');
+                }
+                
                 // ФИКС: Проверяем наличие массива и наличие хотя бы одного элемента
                 if (!goals.distribution || !Array.isArray(goals.distribution) || goals.distribution.length === 0) {
-                    console.warn('⚠️ distribution пустой, не является массивом или отсутствует');
+                    console.warn('⚠️ Не удалось отобразить распределение по целям');
                     container.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-emoji">📊</div>
                             <div>Нет данных для отображения распределения по целям. Начните добавлять доходы!</div>
+                            <button class="btn btn-secondary" style="margin-top: 16px; max-width: 200px;" onclick="console.log('📊 DEBUG:', StatsModule.statsData)">
+                                🐛 Показать данные в консоли
+                            </button>
                         </div>
                     `;
                     return;
